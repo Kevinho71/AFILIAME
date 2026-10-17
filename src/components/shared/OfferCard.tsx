@@ -1,12 +1,13 @@
-import { CalendarClock, MapPin, ShieldCheck, Sparkles } from "lucide-react";
+import { CalendarClock, MapPin, PiggyBank, ShieldCheck } from "lucide-react";
 import { Link } from "react-router-dom";
 import { BusinessMark } from "@/components/shared/BusinessMark";
-import { CupoDots, CuposProgress } from "@/components/shared/CuposProgress";
+import { CuposProgress } from "@/components/shared/CuposProgress";
 import { OfferStatusPill } from "@/components/shared/status";
 import { Badge } from "@/components/ui/badge";
 import { CATEGORY_LABEL } from "@/lib/data";
 import { bob, daysLeft } from "@/lib/format";
-import { available, compareBob, cupoPrice, savingsPct } from "@/lib/selectors";
+import { available, compareBob, cupoPrice } from "@/lib/selectors";
+import { savingsBob } from "@/lib/pricing";
 import type { Offer } from "@/lib/types";
 
 export function offerMeta(offer: Offer) {
@@ -22,8 +23,8 @@ export function offerMeta(offer: Offer) {
 export function OfferCard({ offer }: { offer: Offer }) {
   const meta = offerMeta(offer);
   const price = cupoPrice(offer);
-  const saving = savingsPct(offer);
-  const compare = compareBob(offer);
+  const normal = compareBob(offer);
+  const saving = savingsBob(offer);
 
   return (
     <Link
@@ -43,16 +44,26 @@ export function OfferCard({ offer }: { offer: Offer }) {
         </div>
       </div>
 
-      <div className="mt-3 space-y-2.5">
-        <div className="flex items-start justify-between gap-3">
-          <div className="min-w-0">
-            <p className="truncate text-[15px] font-semibold text-ink">{offer.business}</p>
-            <p className="mt-0.5 truncate text-[12.5px] text-muted-foreground">{offer.title}</p>
+      <div className="mt-3 space-y-3">
+        <div className="min-w-0">
+          <p className="truncate text-[15px] font-semibold text-ink">{offer.business}</p>
+          <p className="mt-0.5 truncate text-[12.5px] text-muted-foreground">{offer.title}</p>
+        </div>
+
+        <div className="rounded-xl border border-border/70 bg-paper-deep/50 px-3.5 py-3">
+          <div className="flex items-end justify-between gap-3">
+            <div>
+              <p className="text-[11px] uppercase tracking-wide text-muted-foreground">Por cupo</p>
+              <p className="num mt-1 text-[12.5px] text-muted-foreground line-through">
+                {bob(normal)}
+              </p>
+            </div>
+            <p className="num font-display text-[26px] leading-none text-brand">{bob(price)}</p>
           </div>
-          <div className="shrink-0 text-right">
-            <p className="num font-display text-[19px] leading-none text-ink">{bob(price)}</p>
-            <p className="text-[11px] text-muted-foreground">por cupo</p>
-          </div>
+          <p className="mt-2 inline-flex items-center gap-1.5 rounded-full bg-brand-soft px-2.5 py-1 text-[11.5px] font-semibold text-brand">
+            <PiggyBank className="size-3.5" aria-hidden="true" />
+            Ahorras {bob(saving)}
+          </p>
         </div>
 
         <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5 text-[11.5px] text-muted-foreground">
@@ -64,16 +75,9 @@ export function OfferCard({ offer }: { offer: Offer }) {
             <CalendarClock className="size-3.5" aria-hidden="true" />
             {meta.text}
           </span>
-          {saving > 0 && (
-            <span className="inline-flex items-center gap-1.5 font-medium text-brand">
-              <Sparkles className="size-3.5" aria-hidden="true" />
-              {saving}% menos que {bob(compare)}
-            </span>
-          )}
         </div>
 
         <CuposProgress offer={offer} />
-        <CupoDots offer={offer} />
       </div>
     </Link>
   );

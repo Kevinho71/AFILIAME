@@ -112,7 +112,7 @@ export function OfferManage() {
 
       <Card>
         <CardContent className="p-4">
-          <CuposProgress offer={offer} tone={available(offer) === 0 ? "success" : "brand"} />
+          <CuposProgress offer={offer}  />
           <div className="mt-3 flex flex-wrap gap-2">
             <Button
               variant="outline"

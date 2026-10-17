@@ -85,6 +85,21 @@ abierto (`/?login=1`).
 | Cambiar de cuenta | Vuelve a la landing con el modal de acceso abierto |
 | Reiniciar datos | Vuelve al estado inicial del recorrido |
 
+## Vista del cliente (reglas de diseño)
+
+- **Escritorio normal**: la app del cliente usa barra superior con navegación (Explorar, Mis cupos,
+  Avisos, Perfil), contenido centrado de 1180 px y dos columnas en las pantallas largas. En móvil
+  cambia a barra inferior; no hay marco de teléfono.
+- **Solo bolivianos**: el cliente paga por QR en Bs y nunca ve montos en dólares digitales/USDC.
+  Esa información vive únicamente en el panel del negocio.
+- **Tarjetas con el ahorro**: precio normal tachado + precio actual resaltado + “Ahorras Bs X”.
+  Sin etiquetas de porcentaje ni la palabra “descuento”.
+- **Una sola barra de cupos**, dividida en tantos tramos como cupos tenga la oferta.
+- **Sin datos de terceros**: nunca se muestra quién ocupa los otros cupos, ni nombres, ni fechas de
+  pago ajenas. Solo el agregado (“1 de 3 cupos ocupados”).
+- “Tu pago está protegido” y “Qué pasa después de pagar” quedan compactados en un botón con
+  diálogo y en un desplegable, para no ocupar espacio.
+
 ## Mapa de pantallas
 
 ### Cliente (U1–U13)

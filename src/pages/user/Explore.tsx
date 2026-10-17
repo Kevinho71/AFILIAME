@@ -162,7 +162,7 @@ export function Explore() {
           }
         />
       ) : (
-        <div className="grid gap-3 sm:grid-cols-2">
+        <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
           {list.map((offer) => (
             <OfferCard key={offer.id} offer={offer} />
           ))}

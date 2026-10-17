@@ -76,7 +76,6 @@ export function Welcome() {
   };
 
   const showcase = offerById(offers, "powerfit");
-  const savings = Math.round(((MONTHLY * 12 - ANNUAL) / (MONTHLY * 12)) * 100);
   const cupoSavings = MONTHLY * SHARED_MONTHS - CUPO;
 
   return (
@@ -182,7 +181,7 @@ export function Welcome() {
                     </div>
 
                     <div className="mt-4">
-                      <CuposProgress offer={showcase} tone="brand" />
+                      <CuposProgress offer={showcase} />
                     </div>
 
                     <div className="mt-4 grid grid-cols-2 gap-3">
@@ -291,7 +290,7 @@ export function Welcome() {
                     {bob(ANNUAL)}
                   </p>
                   <p className="mt-1 text-[12.5px] text-muted-foreground">
-                    Año completo al precio de anualidad · {savings}% menos que pagar mensual
+                    Año completo al precio de anualidad · ahorras {bob(MONTHLY * 12 - ANNUAL)} frente a pagar mes a mes
                   </p>
                   <div className="mt-4 flex items-end gap-1" aria-hidden="true">
                     {Array.from({ length: 12 }).map((_, index) => (
@@ -446,7 +445,7 @@ export function Welcome() {
                       "Ingreso adelantado: cuando el grupo se completa, cobras el año completo de una vez.",
                       "Más clientes: atrae a quien nunca compraría una anualidad completa.",
                       "Llenas capacidad ociosa con cupos por franja horaria a menor precio.",
-                      "Tu saldo queda en dólares digitales: mantener, retirar a tu banco o pagar un QR.",
+                      "Tu saldo queda disponible en una billetera: mantenerlo, retirarlo a tu banco o pagar un QR.",
                       "Panel con llenado, clientes nuevos e ingresos anticipados, más validación de accesos.",
                     ].map((item) => (
                       <li key={item} className="flex gap-2.5">
@@ -487,8 +486,8 @@ export function Welcome() {
                 },
                 {
                   icon: Wallet,
-                  title: "Dólares digitales para el negocio",
-                  body: "El negocio elige cómo terminar: mantener su saldo, retirarlo a bolivianos o pagar con un QR.",
+                  title: "Cobro flexible para el negocio",
+                  body: "El negocio elige qué hacer con lo que cobra: mantener su saldo, retirarlo a su banco en bolivianos o pagar con un QR.",
                 },
               ].map((item) => {
                 const Icon = item.icon;

@@ -1,64 +1,58 @@
-import { Progress } from "@/components/ui/progress";
-import type { Offer } from "@/lib/types";
-import { paidCount, progressPct } from "@/lib/selectors";
+import { paidCount } from "@/lib/selectors";
+import type { CupoStatus, Offer } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
+const SEGMENT: Record<CupoStatus, string> = {
+  disponible: "bg-secondary ring-1 ring-inset ring-border",
+  reservado: "bg-gold/70",
+  en_garantia: "bg-brand",
+  activo: "bg-brand",
+  finalizado: "bg-brand/70",
+  reembolsado: "bg-danger/60",
+  en_cesion: "bg-gold/70",
+};
+
+/**
+ * Una sola barra de cupos, dividida en tantos tramos como cupos tenga la oferta.
+ * No muestra quién ocupa cada cupo: solo cuántos están tomados y cuántos quedan libres.
+ */
 export function CuposProgress({
   offer,
   showLabel = true,
   className,
-  tone,
 }: {
   offer: Offer;
   showLabel?: boolean;
   className?: string;
-  tone?: "brand" | "warn" | "success";
 }) {
   const total = offer.cupos.length;
   const paid = paidCount(offer);
-  const pct = progressPct(offer);
-  const indicator = {
-    brand: "bg-primary",
-    warn: "bg-gold",
-    success: "bg-success",
-  } as const;
+  const free = total - paid;
 
   return (
     <div className={cn("space-y-2", className)}>
       {showLabel && (
-        <div className="flex items-center justify-between text-[12.5px]">
+        <div className="flex items-center justify-between text-[12px]">
           <span className="font-medium text-ink">
-            {paid} de {total} cupos llenos
+            {paid} de {total} cupos ocupados
           </span>
-          <span className="num text-muted-foreground">{pct}%</span>
+          <span className="text-muted-foreground">
+            {free === 0 ? "Grupo completo" : `${free} ${free === 1 ? "libre" : "libres"}`}
+          </span>
         </div>
       )}
-      <Progress
-        value={pct}
-        indicatorClassName={tone ? indicator[tone] : undefined}
-        aria-label={`${paid} de ${total} cupos llenos`}
-      />
-    </div>
-  );
-}
-
-export function CupoDots({ offer, className }: { offer: Offer; className?: string }) {
-  return (
-    <div className={cn("flex items-center gap-1.5", className)}>
-      {offer.cupos.map((cupo) => {
-        const filled = cupo.status !== "disponible";
-        return (
+      <div
+        className="flex gap-1.5"
+        role="img"
+        aria-label={`${paid} de ${total} cupos ocupados`}
+      >
+        {offer.cupos.map((cupo) => (
           <span
             key={cupo.id}
-            title={cupo.label}
-            className={cn(
-              "h-1.5 flex-1 rounded-full",
-              filled ? "bg-primary" : "bg-secondary",
-              cupo.status === "reembolsado" && "bg-danger/60",
-            )}
+            className={cn("h-2.5 flex-1 rounded-full transition-colors", SEGMENT[cupo.status])}
           />
-        );
-      })}
+        ))}
+      </div>
     </div>
   );
 }

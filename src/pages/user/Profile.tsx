@@ -6,7 +6,6 @@ import {
   Banknote,
   Bell,
   CircleHelp,
-  Globe,
   Landmark,
   LogOut,
   Mail,
@@ -63,7 +62,7 @@ const FAQ = [
   },
   {
     q: "¿El saldo del negocio genera intereses?",
-    a: "No. El saldo en dólares digitales no genera rendimiento. Cualquier producto de rendimiento sería futuro, opcional y de terceros, con validación legal previa.",
+    a: "No. El saldo del negocio no genera rendimiento. Cualquier producto de rendimiento sería futuro, opcional y de terceros, con validación legal previa.",
   },
 ];
 
@@ -124,10 +123,10 @@ export function Profile() {
       </Card>
 
       <div>
-        <SectionTitle hint="Pagos en bolivianos y del exterior">Métodos de pago</SectionTitle>
+        <SectionTitle hint="Pagas siempre en bolivianos">Métodos de pago</SectionTitle>
         <div className="space-y-2">
           <div className="flex items-center gap-3 rounded-2xl border border-border/80 bg-card p-3.5">
-            <span className="flex size-9 items-center justify-center rounded-lg bg-brand-soft text-brand-deep">
+            <span className="flex size-9 items-center justify-center rounded-lg bg-brand-soft text-brand">
               <Landmark className="size-4.5" aria-hidden="true" />
             </span>
             <div className="min-w-0">
@@ -137,17 +136,6 @@ export function Profile() {
             <Badge variant="soft" className="ml-auto">
               Predeterminado
             </Badge>
-          </div>
-          <div className="flex items-center gap-3 rounded-2xl border border-border/80 bg-card p-3.5">
-            <span className="flex size-9 items-center justify-center rounded-lg bg-gold-soft text-warn">
-              <Globe className="size-4.5" aria-hidden="true" />
-            </span>
-            <div className="min-w-0">
-              <p className="text-[13.5px] font-medium text-ink">Pago desde el exterior</p>
-              <p className="text-[11.5px] text-muted-foreground">
-                Dólares digitales (USDC) para pagar el cupo de otra persona
-              </p>
-            </div>
           </div>
           <Button
             variant="outline"
