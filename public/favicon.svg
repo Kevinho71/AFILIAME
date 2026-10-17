@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="Cupos">
+  <rect width="64" height="64" rx="16" fill="#0f5c4a" />
+  <path
+    d="M20 24h24M20 32h24M20 40h24"
+    stroke="#dff0e6"
+    stroke-width="5"
+    stroke-linecap="round"
+  />
+  <circle cx="44" cy="44" r="11" fill="#b8862f" stroke="#0f5c4a" stroke-width="3" />
+  <path d="M44 39v10M41 41.5h6M41 46.5h6" stroke="#fdf6e7" stroke-width="2.2" stroke-linecap="round" />
+</svg>
