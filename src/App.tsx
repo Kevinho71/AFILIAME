@@ -55,7 +55,7 @@ function DemoPanelGate() {
 
 export function App() {
   return (
-    <BrowserRouter>
+    <BrowserRouter basename={import.meta.env.BASE_URL}>
       <ScrollToTop />
       <div className="flex min-h-dvh flex-col bg-paper-deep">
         <div className="flex-1">

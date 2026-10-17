@@ -10,8 +10,25 @@ Stellar. El estado vive en el navegador (Zustand + localStorage).
 npm install
 npm run dev      # http://localhost:5173
 npm run build    # typecheck (tsc -b) + build de producción
-npm run preview  # sirve el build
+npm run preview  # sirve el build en http://localhost:4173/AFILIAME/
 ```
+
+## Deploy en GitHub Pages
+
+Sitio publicado: **https://kevinho71.github.io/AFILIAME/**
+
+- `vite.config.ts` usa `base: "/AFILIAME/"` en el build (el dev server sigue en `/`). Si renombras el
+  repositorio, cambia esa constante.
+- El router usa `basename={import.meta.env.BASE_URL}`, así que las rutas funcionan dentro del
+  subdirectorio del repo.
+- `postbuild` (`scripts/pages-postbuild.mjs`) genera `dist/404.html` —copia del `index.html`— para
+  que los enlaces profundos tipo `/AFILIAME/oferta/powerfit` carguen la SPA en lugar de un 404, y
+  deja `.nojekyll`.
+- `.github/workflows/deploy-pages.yml` construye y publica en cada push a `main` (o manualmente
+  desde la pestaña Actions). `.github/workflows/ci.yml` corre typecheck + build en cada push.
+- En el repositorio, Pages está configurado con origen **GitHub Actions**
+  (Settings → Pages → Source). Si aparece "Not Found" al entrar, revisa que ese origen siga puesto.
+
 
 ## Stack
 
