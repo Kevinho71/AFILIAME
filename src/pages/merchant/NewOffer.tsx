@@ -9,7 +9,6 @@ import {
   Layers,
   Rocket,
   ShieldCheck,
-  Sparkles,
   Users,
 } from "lucide-react";
 import { toast } from "sonner";
@@ -20,7 +19,7 @@ import { Input, Textarea } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Separator } from "@/components/ui/separator";
-import { Chip, DemoNote, InfoNote, MoneyRow, PageHeader, SectionTitle } from "@/components/shared/pieces";
+import { Chip, DemoNote, MoneyRow, PageHeader, SectionTitle } from "@/components/shared/pieces";
 import { useAppStore, PLATFORM_FEE } from "@/store/useAppStore";
 import type { CupoUsage } from "@/lib/types";
 import { bob, usdc } from "@/lib/format";
@@ -28,10 +27,10 @@ import { cn } from "@/lib/utils";
 
 const STEPS = [
   "Datos del servicio",
-  "Precio y ahorro del cliente",
+  "Precio",
   "División en cupos",
   "Reglas y liberación",
-  "Revisión y publicación",
+  "Revisión",
 ];
 
 const CATEGORIES = ["gimnasio", "coworking", "club", "academia", "parqueo", "otros"] as const;
@@ -49,7 +48,6 @@ export function NewOffer() {
     description:
       "Acceso a sala de musculación, clases grupales y evaluación física durante tu periodo.",
     annual: "1800",
-    monthly: "200",
     usage: "compartido" as CupoUsage,
     cupos: "3",
     deadlineDays: "5",
@@ -63,15 +61,12 @@ export function NewOffer() {
 
   const numbers = useMemo(() => {
     const annual = Number(data.annual) || 0;
-    const monthly = Number(data.monthly) || 0;
     const cupos = Math.max(1, Number(data.cupos) || 1);
     const pricePerCupo = Math.round((annual / cupos) * 100) / 100;
-    const compare = monthly * 4;
-    const saving = compare > pricePerCupo ? Math.round(((compare - pricePerCupo) / compare) * 100) : 0;
     const escrow = Math.round((annual / rate) * 100) / 100;
     const fee = Math.round(escrow * PLATFORM_FEE * 100) / 100;
-    return { annual, monthly, cupos, pricePerCupo, compare, saving, escrow, fee, net: Math.round((escrow - fee) * 100) / 100 };
-  }, [data.annual, data.monthly, data.cupos, rate]);
+    return { annual, cupos, pricePerCupo, escrow, fee, net: Math.round((escrow - fee) * 100) / 100 };
+  }, [data.annual, data.cupos, rate]);
 
   const cupoLabels = useMemo(() => {
     const count = numbers.cupos;
@@ -97,45 +92,70 @@ export function NewOffer() {
     step === 0
       ? data.service.trim().length > 2 && data.address.trim().length > 3
       : step === 1
-        ? numbers.annual > 0 && numbers.monthly > 0
-        : step === 2
-          ? numbers.cupos >= 2
-          : true;
+        ? numbers.annual > 0 && numbers.cupos >= 2
+        : true;
 
   return (
-    <div className="space-y-5">
+    <div className="space-y-4 sm:space-y-5">
       <PageHeader
         title="Crear oferta"
-        subtitle="Cinco pasos para publicar tu anualidad dividida en cupos, con simulación del ingreso antes de publicar."
+        subtitle="Cinco pasos para publicar tu anualidad dividida en cupos, con el ingreso calculado en vivo."
         back="/panel/ofertas"
         action={<Badge variant="soft">Asistente de 5 pasos</Badge>}
       />
 
-      <ol className="scrollbar-thin flex gap-2 overflow-x-auto pb-1">
-        {STEPS.map((label, index) => (
-          <li key={label}>
-            <button
-              type="button"
-              onClick={() => index <= step && setStep(index)}
-              className={cn(
-                "flex shrink-0 items-center gap-2 rounded-full border px-3 py-1.5 text-[12px] font-medium transition-colors",
-                index === step
-                  ? "border-primary bg-primary text-primary-foreground"
-                  : index < step
-                    ? "cursor-pointer border-brand/30 bg-brand-soft text-brand-deep"
-                    : "border-border bg-card text-muted-foreground",
-              )}
-            >
-              <span className="num">{index + 1}</span>
-              {label}
-            </button>
-          </li>
-        ))}
+      <ol className="grid grid-cols-5 gap-1 sm:gap-2">
+        {STEPS.map((label, index) => {
+          const done = index < step;
+          const active = index === step;
+          return (
+            <li key={label}>
+              <button
+                type="button"
+                onClick={() => index <= step && setStep(index)}
+                disabled={index > step}
+                className={cn(
+                  "flex w-full flex-col items-center gap-1 rounded-xl px-1 py-1.5 text-center transition-colors",
+                  active
+                    ? "bg-brand-soft"
+                    : done
+                      ? "cursor-pointer hover:bg-secondary/60"
+                      : "opacity-55",
+                )}
+              >
+                <span
+                  className={cn(
+                    "flex size-6 items-center justify-center rounded-full text-[11px] font-semibold",
+                    active
+                      ? "bg-primary text-primary-foreground"
+                      : done
+                        ? "bg-brand/20 text-brand"
+                        : "bg-secondary text-muted-foreground",
+                  )}
+                >
+                  {done ? (
+                    <Check className="size-3.5" aria-hidden="true" />
+                  ) : (
+                    <span className="num">{index + 1}</span>
+                  )}
+                </span>
+                <span
+                  className={cn(
+                    "text-[10px] leading-tight sm:text-[11px]",
+                    active ? "font-semibold text-ink" : "text-muted-foreground",
+                  )}
+                >
+                  {label}
+                </span>
+              </button>
+            </li>
+          );
+        })}
       </ol>
 
       <div className="grid gap-4 lg:grid-cols-[1.5fr_1fr]">
         <Card>
-          <CardContent className="p-5">
+          <CardContent className="p-4 sm:p-5">
             {step === 0 && (
               <div className="space-y-4">
                 <SectionTitle>Datos del servicio</SectionTitle>
@@ -193,7 +213,7 @@ export function NewOffer() {
 
             {step === 1 && (
               <div className="space-y-4">
-                <SectionTitle>Precio anual y ahorro del cliente</SectionTitle>
+                <SectionTitle>Precio</SectionTitle>
                 <div className="grid gap-3 sm:grid-cols-2">
                   <div className="space-y-2">
                     <Label htmlFor="annual">Precio de la anualidad (Bs)</Label>
@@ -205,41 +225,38 @@ export function NewOffer() {
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="monthly">Tarifa mensual de referencia (Bs)</Label>
+                    <Label htmlFor="cupos">Número de cupos</Label>
                     <Input
-                      id="monthly"
+                      id="cupos"
                       inputMode="numeric"
-                      value={data.monthly}
-                      onChange={(event) => update("monthly", event.target.value.replace(/\D/g, ""))}
+                      value={data.cupos}
+                      onChange={(event) => update("cupos", event.target.value.replace(/\D/g, "").slice(0, 2))}
                     />
                   </div>
                 </div>
 
-                <div className="grid gap-3 sm:grid-cols-2">
-                  <div className="rounded-xl border border-border/80 bg-paper-deep/50 p-3.5">
-                    <p className="text-[11.5px] text-muted-foreground">Pagando mes a mes</p>
-                    <p className="num mt-1 font-display text-[22px] text-muted-foreground/70 line-through">
-                      {bob(numbers.compare)}
-                    </p>
-                    <p className="text-[11.5px] text-muted-foreground">
-                      {bob(numbers.monthly)} × 4 meses
-                    </p>
-                  </div>
-                  <div className="rounded-xl border border-brand/30 bg-brand-soft/60 p-3.5">
-                    <p className="text-[11.5px] text-brand-deep">Tarifa anual dividida</p>
-                    <p className="num mt-1 font-display text-[22px] text-brand-deep">
-                      {bob(numbers.pricePerCupo)}
-                    </p>
-                    <p className="text-[11.5px] font-medium text-brand">
-                      {numbers.saving}% de ahorro para el cliente
-                    </p>
-                  </div>
+                <div className="rounded-xl border border-brand/30 bg-brand-soft/60 p-3.5">
+                  <p className="text-[11.5px] text-brand-deep">Tarifa dividida por cupo</p>
+                  <p className="num mt-1 font-display text-[26px] text-brand-deep">
+                    {bob(numbers.pricePerCupo)}
+                  </p>
+                  <p className="mt-1 text-[11.5px] text-muted-foreground">
+                    Se calcula sola: {bob(numbers.annual)} ÷ {numbers.cupos} cupos.
+                  </p>
                 </div>
 
-                <InfoNote tone="info" icon={Sparkles}>
-                  El cliente siempre ve su ahorro frente a la tarifa mensual. El precio anual es lo
-                  que hace atractiva la compra del cupo.
-                </InfoNote>
+                <div className="rounded-xl border border-gold/25 bg-gold-soft/40 p-3.5">
+                  <p className="flex items-center gap-2 text-[13px] font-semibold text-warn">
+                    <Coins className="size-4" aria-hidden="true" />
+                    Beneficio para tu negocio
+                  </p>
+                  <p className="mt-1.5 text-[12.5px] leading-relaxed text-gold/90">
+                    Cobras <span className="num font-semibold">{bob(numbers.annual)}</span> por
+                    adelantado y recibes{" "}
+                    <span className="num font-semibold">{usdc(numbers.net)}</span> al liberar la
+                    garantía (≈ {bob(numbers.net * rate)}), ya descontada la comisión.
+                  </p>
+                </div>
               </div>
             )}
 
@@ -285,19 +302,6 @@ export function NewOffer() {
                     </label>
                   ))}
                 </RadioGroup>
-
-                <div className="space-y-2">
-                  <Label htmlFor="cupos">Número de cupos</Label>
-                  <Input
-                    id="cupos"
-                    inputMode="numeric"
-                    value={data.cupos}
-                    onChange={(event) => update("cupos", event.target.value.replace(/\D/g, "").slice(0, 2))}
-                  />
-                  <p className="text-[11.5px] text-muted-foreground">
-                    Con uso compartido no hay fechas: cada beneficiario usa el servicio cuando quiere, dentro del horario del negocio (3 cupos reparten la anualidad).
-                  </p>
-                </div>
 
                 <div className="space-y-2">
                   <p className="text-[13px] font-medium text-ink">Vista previa</p>
@@ -502,7 +506,7 @@ export function NewOffer() {
         <div className="space-y-3">
           <Card>
             <CardContent className="p-4">
-              <SectionTitle hint="Antes de publicar">Simulación de ingreso</SectionTitle>
+              <SectionTitle hint="Calculado en vivo">Tu ingreso</SectionTitle>
               <MoneyRow label="Anualidad cobrada" value={bob(numbers.annual)} />
               <MoneyRow
                 label="Cupos y precio"
@@ -518,7 +522,7 @@ export function NewOffer() {
               <MoneyRow label="Recibes al liberar" value={usdc(numbers.net)} strong />
               <MoneyRow
                 label="Equivalente en bolivianos"
-                hint="Convertido a la tasa ilustrativa"
+                hint="Convertido a la tasa de referencia"
                 value={bob(numbers.net * rate)}
               />
             </CardContent>
@@ -551,7 +555,7 @@ export function NewOffer() {
               <ul className="mt-1.5 space-y-1 text-[12px] leading-relaxed text-gold/90">
                 <li>• Los fondos en garantía no se usan para otro fin ni generan rendimiento.</li>
                 <li>• La comisión se descuenta recién en la liberación.</li>
-                <li>• El precio por cupo se calcula como la anualidad dividida entre los cupos.</li>
+                <li>• El precio por cupo se calcula solo: anualidad dividida entre los cupos.</li>
               </ul>
             </CardContent>
           </Card>
