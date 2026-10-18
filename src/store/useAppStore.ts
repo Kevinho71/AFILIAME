@@ -646,7 +646,7 @@ export const useAppStore = create<AppState>()(
       reset: () => set({ ...seedState() }),
     }),
     {
-      name: "cupos-demo-v1",
+      name: "cupos-demo-v2",
       storage: createJSONStorage(() => localStorage),
       partialize: (state) => ({
         role: state.role,

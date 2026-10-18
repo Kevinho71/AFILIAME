@@ -31,6 +31,7 @@ export function amount(value: number) {
 }
 
 export function initials(name: string) {
+  if (!name) return "??";
   return name
     .split(" ")
     .filter(Boolean)
@@ -45,7 +46,9 @@ export function daysLeft(iso: string, from = new Date("2026-10-17T09:00:00")) {
 }
 
 export function shortDate(iso: string) {
+  if (!iso) return "—";
   const [y, m, d] = iso.split("-");
+  if (!y || !m || !d) return iso;
   return `${d}/${m}/${y}`;
 }
 
