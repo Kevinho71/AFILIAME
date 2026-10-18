@@ -1,5 +1,6 @@
 import { Link } from "react-router-dom";
 import {
+  ArrowDownLeft,
   ArrowDownRight,
   ArrowUpRight,
   Banknote,
@@ -24,7 +25,7 @@ import {
   StatCard,
 } from "@/components/shared/pieces";
 import { useAppStore } from "@/store/useAppStore";
-import { bob, shortDate, usdc } from "@/lib/format";
+import { bob, usdc } from "@/lib/format";
 import { merchantOffers, totalEscrow } from "@/lib/selectors";
 import { cn } from "@/lib/utils";
 
@@ -32,6 +33,7 @@ const KIND = {
   liberacion: { label: "Liberación", tone: "success" as const, icon: ShieldCheck },
   retiro: { label: "Retiro", tone: "info" as const, icon: Landmark },
   pago_qr: { label: "Pago QR", tone: "gold" as const, icon: QrCode },
+  deposito: { label: "Depósito", tone: "success" as const, icon: ArrowDownLeft },
 };
 
 export function WalletPage() {
@@ -44,11 +46,11 @@ export function WalletPage() {
 
   const actions = [
     {
-      title: "Mantener",
-      body: "Deja tu saldo en dólares digitales. Conserva valor y no genera intereses.",
-      icon: Coins,
-      cta: "Mantener saldo",
-      to: null,
+      title: "Depositar saldo",
+      body: "Genera un QR y paga desde tu banco. El monto se convierte directo a dólares digitales.",
+      icon: Banknote,
+      cta: "Depositar",
+      to: "/panel/billetera/depositar",
     },
     {
       title: "Retirar a mi banco",
@@ -64,10 +66,17 @@ export function WalletPage() {
       cta: "Pagar con QR",
       to: "/panel/billetera/pagar-qr",
     },
+    {
+      title: "Mantener saldo",
+      body: "Deja tu saldo en dólares digitales. Conserva valor y no genera intereses.",
+      icon: Coins,
+      cta: "Mantener",
+      to: null,
+    },
   ];
 
   return (
-    <div className="space-y-5">
+    <div className="space-y-4 sm:space-y-5">
       <PageHeader
         title="Billetera"
         subtitle="Tu saldo en dólares digitales, el dinero por liberar y el historial de movimientos."
@@ -79,7 +88,7 @@ export function WalletPage() {
         }
       />
 
-      <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+      <div className="grid grid-cols-2 gap-3 xl:grid-cols-3">
         <StatCard
           label="Saldo disponible"
           value={usdc(walletUsdc)}
@@ -99,6 +108,7 @@ export function WalletPage() {
           value={`Bs ${rate}`}
           hint="Definida con el socio de liquidez · valor ilustrativo"
           icon={RefreshCcw}
+          className="col-span-2 xl:col-span-1"
         />
       </div>
 
@@ -107,7 +117,7 @@ export function WalletPage() {
         usan para ningún otro fin.
       </InfoNote>
 
-      <div className="grid gap-3 lg:grid-cols-3">
+      <div className="grid gap-3 sm:grid-cols-2">
         {actions.map((item) => {
           const Icon = item.icon;
           return (
@@ -145,8 +155,10 @@ export function WalletPage() {
       </div>
 
       <div>
-        <SectionTitle hint="Liberaciones, retiros y pagos">Historial</SectionTitle>
-        <Card>
+        <SectionTitle hint="Liberaciones, retiros, depósitos y pagos">Historial</SectionTitle>
+
+        {/* Escritorio: tabla */}
+        <Card className="hidden md:block">
           <CardContent className="p-0">
             <Table>
               <TableHeader>
@@ -165,9 +177,7 @@ export function WalletPage() {
                   const positive = tx.usdc > 0;
                   return (
                     <TableRow key={tx.id}>
-                      <TableCell className="num text-[12.5px] text-muted-foreground">
-                        {shortDate("2026-10-17") === tx.date ? tx.date : tx.date}
-                      </TableCell>
+                      <TableCell className="num text-[12.5px] text-muted-foreground">{tx.date}</TableCell>
                       <TableCell>
                         <p className="text-[13px] font-medium text-ink">{tx.title}</p>
                         <p className="text-[11.5px] text-muted-foreground">{tx.subtitle}</p>
@@ -209,6 +219,53 @@ export function WalletPage() {
             </Table>
           </CardContent>
         </Card>
+
+        {/* Móvil: lista de tarjetas */}
+        <div className="space-y-2.5 md:hidden">
+          {walletTx.map((tx) => {
+            const meta = KIND[tx.kind];
+            const Icon = meta.icon;
+            const positive = tx.usdc > 0;
+            return (
+              <Card key={tx.id}>
+                <CardContent className="p-3.5">
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="min-w-0">
+                      <p className="text-[13px] font-medium text-ink">{tx.title}</p>
+                      <p className="mt-0.5 text-[11.5px] text-muted-foreground">{tx.subtitle}</p>
+                      <p className="mt-0.5 font-mono text-[10.5px] text-muted-foreground/80">
+                        {tx.ref} · {tx.date}
+                      </p>
+                    </div>
+                    <Badge variant={meta.tone} className="shrink-0">
+                      <Icon className="size-3.5" aria-hidden="true" />
+                      {meta.label}
+                    </Badge>
+                  </div>
+                  <Separator className="my-2.5" />
+                  <div className="flex items-center justify-between gap-3">
+                    <span
+                      className={cn(
+                        "num inline-flex items-center gap-1 text-[14px] font-semibold",
+                        positive ? "text-success" : "text-ink",
+                      )}
+                    >
+                      {positive ? (
+                        <ArrowUpRight className="size-3.5" aria-hidden="true" />
+                      ) : (
+                        <ArrowDownRight className="size-3.5" aria-hidden="true" />
+                      )}
+                      {usdc(tx.usdc, true)}
+                    </span>
+                    <span className="num text-[12.5px] text-muted-foreground">
+                      {tx.bob >= 0 ? bob(tx.bob) : `− ${bob(Math.abs(tx.bob))}`}
+                    </span>
+                  </div>
+                </CardContent>
+              </Card>
+            );
+          })}
+        </div>
       </div>
 
       <div className="grid gap-3 sm:grid-cols-2">

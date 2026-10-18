@@ -94,7 +94,7 @@ export function Dashboard() {
         }
       />
 
-      <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+      <div className="grid grid-cols-2 gap-3 xl:grid-cols-4">
         <StatCard
           label="Saldo disponible"
           value={usdc(walletUsdc)}

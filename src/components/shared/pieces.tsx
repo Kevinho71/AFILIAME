@@ -29,9 +29,9 @@ export function PageHeader({
             Volver
           </Link>
         )}
-        <h1 className="text-balance text-[26px] leading-[1.15]">{title}</h1>
+        <h1 className="text-balance text-[21px] leading-[1.15] sm:text-[26px]">{title}</h1>
         {subtitle && (
-          <p className="mt-1.5 max-w-2xl text-pretty text-[13.5px] leading-relaxed text-muted-foreground">
+          <p className="mt-1 max-w-2xl text-pretty text-[12.5px] leading-relaxed text-muted-foreground sm:mt-1.5 sm:text-[13.5px]">
             {subtitle}
           </p>
         )}
@@ -52,8 +52,8 @@ export function SectionTitle({
 }) {
   return (
     <div className={cn("mb-3 flex items-end justify-between gap-3", className)}>
-      <h2 className="text-[17px] leading-tight">{children}</h2>
-      {hint && <span className="text-[12.5px] text-muted-foreground">{hint}</span>}
+      <h2 className="text-[15px] leading-tight sm:text-[17px]">{children}</h2>
+      {hint && <span className="text-[12px] text-muted-foreground sm:text-[12.5px]">{hint}</span>}
     </div>
   );
 }
@@ -84,19 +84,21 @@ export function StatCard({
     gold: "bg-gold/15 text-gold",
   } as const;
   return (
-    <div className={cn("rounded-2xl border p-4", tones[tone], className)}>
+    <div className={cn("rounded-2xl border p-3.5 sm:p-4", tones[tone], className)}>
       <div className="flex items-center justify-between gap-3">
-        <span className="text-[12px] font-medium uppercase tracking-wide text-muted-foreground">
+        <span className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground sm:text-[12px]">
           {label}
         </span>
         {Icon && (
-          <span className={cn("flex size-8 items-center justify-center rounded-lg", iconTones[tone])}>
-            <Icon className="size-4" aria-hidden="true" />
+          <span className={cn("flex size-7 items-center justify-center rounded-lg sm:size-8", iconTones[tone])}>
+            <Icon className="size-3.5 sm:size-4" aria-hidden="true" />
           </span>
         )}
       </div>
-      <div className="num mt-3 font-display text-[24px] leading-none text-ink">{value}</div>
-      {hint && <p className="mt-2 text-[12.5px] leading-snug text-muted-foreground">{hint}</p>}
+      <div className="num mt-2.5 font-display text-[20px] leading-none text-ink sm:mt-3 sm:text-[24px]">
+        {value}
+      </div>
+      {hint && <p className="mt-1.5 text-[11.5px] leading-snug text-muted-foreground sm:mt-2 sm:text-[12.5px]">{hint}</p>}
     </div>
   );
 }
@@ -150,7 +152,7 @@ export function MoneyRow({
   return (
     <div
       className={cn(
-        "flex items-baseline justify-between gap-4 py-2",
+        "flex items-baseline justify-between gap-4 py-1.5 sm:py-2",
         strong && "border-t border-border/80 pt-3",
         className,
       )}

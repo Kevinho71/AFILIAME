@@ -28,6 +28,7 @@ import { EmptyState, InfoNote, MoneyRow, PageHeader, SectionTitle } from "@/comp
 import { useAppStore } from "@/store/useAppStore";
 import { bob, shortDate } from "@/lib/format";
 import { cupoById } from "@/lib/selectors";
+import { cupoWhen } from "@/lib/usage";
 
 type Status = "esperando" | "confirmando" | "confirmado" | "expirado";
 
@@ -223,7 +224,7 @@ export function Payment() {
                   </p>
                   <p className="mt-1 text-[14px] font-semibold text-ink">{offer.title}</p>
                   <p className="text-[12px] text-muted-foreground">
-                    {cupo.label} · {shortDate(cupo.start)} al {shortDate(cupo.end)}
+                    {cupo.label} · {cupoWhen(offer, cupo)}
                   </p>
                 </div>
                 <Badge variant="soft">
@@ -258,7 +259,7 @@ export function Payment() {
               <AccordionContent>
                 <p>
                   El grupo sigue juntando cupos hasta el {shortDate(offer.deadline)}. Si se completa,
-                  el negocio cobra el año completo y tu pase digital queda listo. Si no se completa,
+                  el negocio cobra el año completo y tu código de activación queda listo. Si no se completa,
                   el reembolso vuelve solo a tu cuenta de origen.
                 </p>
               </AccordionContent>

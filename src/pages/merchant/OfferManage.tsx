@@ -33,6 +33,7 @@ import { DemoNote, EmptyState, InfoNote, PageHeader, SectionTitle, StatCard } fr
 import { useAppStore, escrowOf, PLATFORM_FEE } from "@/store/useAppStore";
 import { bob, initials, shortDate, usdc } from "@/lib/format";
 import { offerById, paidCount, available } from "@/lib/selectors";
+import { cupoWhen } from "@/lib/usage";
 
 export function OfferManage() {
   const { offerId } = useParams();
@@ -188,7 +189,7 @@ export function OfferManage() {
                       {cupo.participant?.name ?? "Cupo disponible"}
                     </p>
                     <p className="text-[11.5px] text-muted-foreground">
-                      {cupo.label} · {shortDate(cupo.start)} al {shortDate(cupo.end)}
+                      {cupo.label} · {cupoWhen(offer, cupo)}
                     </p>
                     {cupo.participant && (
                       <p className="mt-0.5 flex items-center gap-1.5 text-[11px] text-muted-foreground">
@@ -217,7 +218,7 @@ export function OfferManage() {
                           onClick={() =>
                             toast.info("Reasignación solicitada", {
                               description:
-                                "El beneficiario debe confirmar antes de cambiar el nombre del pase.",
+                                "El beneficiario debe confirmar antes de cambiar el titular del cupo.",
                             })
                           }
                         >

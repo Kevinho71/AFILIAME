@@ -16,10 +16,12 @@ import type {
   Role,
   WalletTx,
 } from "@/lib/types";
-import { TODAY } from "@/lib/format";
+import { TODAY, daysLeft } from "@/lib/format";
 
 export const PLATFORM_FEE = 0.03;
 export const CONVERSION_MARGIN = 0.01;
+export const WITHDRAW_PENALTY = 0.02;
+export const WITHDRAW_CUTOFF_DAYS = 3;
 export const RATES = [10, 11.2, 9.6];
 
 const r2 = (value: number) => Math.round(value * 100) / 100;
@@ -33,7 +35,8 @@ const ref = (prefix: string) => {
 
 const isPaid = (cupo: Cupo) =>
   cupo.status === "en_garantia" ||
-  cupo.status === "activo" ||
+  cupo.status === "emitido" ||
+  cupo.status === "activado" ||
   cupo.status === "finalizado";
 
 export const escrowOf = (offer: Offer) =>
@@ -47,6 +50,23 @@ export const paidCount = (offer: Offer) => offer.cupos.filter(isPaid).length;
 
 export const availableCount = (offer: Offer) =>
   offer.cupos.filter((cupo) => cupo.status === "disponible").length;
+
+export type WithdrawRule = "arrepentimiento" | "penalizado" | "solo_cesion" | "no_disponible";
+
+/**
+ * Reglas de retiro de un cupo pagado (mientras está en garantía, antes de liberarse):
+ * - arrepentimiento: dentro de las 24 h (mock: pagado hoy), sin penalización.
+ * - penalizado: después de 24 h y con más de 3 días antes del cierre, 2% de penalización.
+ * - solo_cesion: últimos 3 días o ya liberado: no hay retiro, solo cesión.
+ * - no_disponible: el cupo no está en garantía.
+ */
+export function withdrawalRule(offer: Offer, cupo: Cupo): WithdrawRule {
+  if (cupo.status !== "en_garantia") return "no_disponible";
+  if (["liberada", "en_curso", "finalizada"].includes(offer.status)) return "solo_cesion";
+  if (cupo.paidAt === TODAY) return "arrepentimiento";
+  if (daysLeft(offer.deadline) > WITHDRAW_CUTOFF_DAYS) return "penalizado";
+  return "solo_cesion";
+}
 
 const releaseIfFull = (offers: Offer[]) => {
   let releasedOffer: Offer | null = null;
@@ -64,6 +84,9 @@ const releaseIfFull = (offers: Offer[]) => {
       releasedAt: TODAY,
       feeUsdc: fee,
       netUsdc: net,
+      cupos: offer.cupos.map((cupo) =>
+        cupo.status === "en_garantia" ? { ...cupo, status: "emitido" as const } : cupo,
+      ),
     };
     releasedOffer = released;
     return released;
@@ -112,7 +135,10 @@ interface AppState {
     amountBob: number,
     merchant: string,
   ) => { usdc: number; feeBob: number; totalBob: number; ref: string } | null;
+  deposit: (amountBob: number) => { usdc: number; ref: string } | null;
   requestTransfer: (cupoId: string, priceBob: number) => void;
+  activateCupo: (cupoId: string) => boolean;
+  cancelCupo: (cupoId: string) => { refundBob: number; penaltyBob: number } | null;
   markNotificationsRead: () => void;
   reset: () => void;
 }
@@ -213,7 +239,7 @@ export const useAppStore = create<AppState>()(
           notifications.unshift({
             id: `n-rel-${cupoId}`,
             title: `Grupo completo en ${releasedOffer.business}`,
-            body: "La garantía se liberó y tu pase digital está listo.",
+            body: "La garantía se liberó y tu código de activación está listo.",
             date: "Ahora",
             read: false,
             tone: "success",
@@ -295,7 +321,7 @@ export const useAppStore = create<AppState>()(
               {
                 id: `n-rel-${releasedOffer.id}-${target.id}`,
                 title: `Grupo completo en ${releasedOffer.business}`,
-                body: "La garantía se liberó al negocio y los pases están listos.",
+                body: "La garantía se liberó al negocio y los códigos de activación están listos.",
                 date: "Ahora",
                 read: false,
                 tone: "success" as const,
@@ -395,15 +421,15 @@ export const useAppStore = create<AppState>()(
                   ...item,
                   status: "en_curso" as const,
                   cupos: item.cupos.map((cupo) =>
-                    isPaid(cupo) ? { ...cupo, status: "activo" as const } : cupo,
+                    cupo.status === "en_garantia" ? { ...cupo, status: "emitido" as const } : cupo,
                   ),
                 },
           ),
           notifications: [
             {
               id: `n-start-${offerId}`,
-              title: "Tu pase está activo",
-              body: `${offer.business}: empezó tu periodo. Muestra el pase digital en recepción.`,
+              title: "Tu código de activación está listo",
+              body: `${offer.business}: el ciclo arrancó. Muestra tu código de activación en recepción la primera vez que vayas.`,
               date: "Ahora",
               read: false,
               tone: "success" as const,
@@ -473,6 +499,28 @@ export const useAppStore = create<AppState>()(
         return { usdc: usdcAmount, feeBob, totalBob, ref: tx.ref };
       },
 
+      deposit: (amountBob) => {
+        const state = get();
+        if (amountBob <= 0) return null;
+        const rate = state.rate;
+        const usdcAmount = r2(amountBob / rate);
+        const tx: WalletTx = {
+          id: `tx-dep-${Date.now()}`,
+          kind: "deposito",
+          title: "Depósito desde tu banco",
+          subtitle: "Banco Fassil · conversión directa a USDC",
+          usdc: usdcAmount,
+          bob: amountBob,
+          date: TODAY,
+          ref: ref("DEP"),
+        };
+        set({
+          walletUsdc: r2(state.walletUsdc + usdcAmount),
+          walletTx: [tx, ...state.walletTx],
+        });
+        return { usdc: usdcAmount, ref: tx.ref };
+      },
+
       requestTransfer: (cupoId, priceBob) => {
         const state = get();
         set({
@@ -481,7 +529,7 @@ export const useAppStore = create<AppState>()(
             cupos: offer.cupos.map((cupo) =>
               cupo.id !== cupoId
                 ? cupo
-                : cupo.status === "activo"
+                : cupo.status === "emitido" || cupo.status === "activado"
                   ? {
                       ...cupo,
                       status: "en_cesion" as const,
@@ -503,6 +551,93 @@ export const useAppStore = create<AppState>()(
             ...state.notifications,
           ],
         });
+      },
+
+      activateCupo: (cupoId) => {
+        const state = get();
+        const offer = state.offers.find((item) =>
+          item.cupos.some((cupo) => cupo.id === cupoId),
+        );
+        if (!offer) return false;
+        const cupo = offer.cupos.find((item) => item.id === cupoId);
+        if (!cupo || cupo.status !== "emitido") return false;
+        set({
+          offers: state.offers.map((item) =>
+            item.id !== offer.id
+              ? item
+              : {
+                  ...item,
+                  cupos: item.cupos.map((c) =>
+                    c.id !== cupoId
+                      ? c
+                      : { ...c, status: "activado" as const, activatedAt: TODAY },
+                  ),
+                },
+          ),
+        });
+        return true;
+      },
+
+      cancelCupo: (cupoId) => {
+        const state = get();
+        const offer = state.offers.find((item) =>
+          item.cupos.some((cupo) => cupo.id === cupoId),
+        );
+        if (!offer) return null;
+        const cupo = offer.cupos.find((item) => item.id === cupoId);
+        if (!cupo) return null;
+        const rule = withdrawalRule(offer, cupo);
+        if (rule === "no_disponible" || rule === "solo_cesion") return null;
+
+        const penaltyPct = rule === "arrepentimiento" ? 0 : WITHDRAW_PENALTY;
+        const penaltyBob = r2(cupo.priceBob * penaltyPct);
+        const refundBob = r2(cupo.priceBob - penaltyBob);
+
+        const offers = state.offers.map((item) =>
+          item.id !== offer.id
+            ? item
+            : {
+                ...item,
+                cupos: item.cupos.map((c) =>
+                  c.id !== cupoId
+                    ? c
+                    : {
+                        ...c,
+                        status: "disponible" as const,
+                        participant: undefined,
+                        mine: false,
+                        escrowUsdc: undefined,
+                        lockedRate: undefined,
+                        paidAt: undefined,
+                      },
+                ),
+              },
+        );
+
+        const payments = state.payments.map((payment) =>
+          payment.cupoId === cupoId
+            ? { ...payment, status: "reembolsado" as const, refundedAt: TODAY }
+            : payment,
+        );
+
+        const notifications: AppNotification[] = [
+          {
+            id: `n-cancel-${cupoId}`,
+            title: `Te devolvimos Bs ${refundBob}`,
+            body:
+              penaltyBob > 0
+                ? `Retiraste tu pago con una penalización de Bs ${penaltyBob} (2%). El cupo volvió a quedar libre.`
+                : "Retiraste tu pago dentro de las 24 horas, sin penalización. El cupo volvió a quedar libre.",
+            date: "Ahora",
+            read: false,
+            tone: "danger" as const,
+            href: "/mis-cupos",
+          },
+          ...state.notifications,
+        ];
+
+        set({ offers, payments, notifications });
+        return { refundBob, penaltyBob };
       },
 
       markNotificationsRead: () =>

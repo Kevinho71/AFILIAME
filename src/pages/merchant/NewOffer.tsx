@@ -22,12 +22,13 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Separator } from "@/components/ui/separator";
 import { Chip, DemoNote, InfoNote, MoneyRow, PageHeader, SectionTitle } from "@/components/shared/pieces";
 import { useAppStore, PLATFORM_FEE } from "@/store/useAppStore";
+import type { CupoUsage } from "@/lib/types";
 import { bob, usdc } from "@/lib/format";
 import { cn } from "@/lib/utils";
 
 const STEPS = [
   "Datos del servicio",
-  "Precio y descuento",
+  "Precio y ahorro del cliente",
   "División en cupos",
   "Reglas y liberación",
   "Revisión y publicación",
@@ -49,7 +50,7 @@ export function NewOffer() {
       "Acceso a sala de musculación, clases grupales y evaluación física durante tu periodo.",
     annual: "1800",
     monthly: "200",
-    split: "periodo" as "periodo" | "franja" | "personalizada",
+    usage: "compartido" as CupoUsage,
     cupos: "3",
     deadlineDays: "5",
     release: "completa" as "completa" | "escalonada",
@@ -74,11 +75,11 @@ export function NewOffer() {
 
   const cupoLabels = useMemo(() => {
     const count = numbers.cupos;
-    if (data.split === "franja") {
+    if (data.usage === "franja") {
       const franjas = ["Mañana · 07:00 a 10:00", "Tarde · 15:00 a 18:00", "Noche · 19:00 a 22:00"];
       return Array.from({ length: count }, (_, index) => franjas[index % franjas.length]);
     }
-    if (data.split === "periodo") {
+    if (data.usage === "exclusivo") {
       const periods = [
         "01 nov – 28 feb",
         "01 mar – 30 jun",
@@ -89,8 +90,8 @@ export function NewOffer() {
       ];
       return Array.from({ length: count }, (_, index) => periods[index % periods.length]);
     }
-    return Array.from({ length: count }, (_, index) => `Cupo personalizado ${index + 1}`);
-  }, [numbers.cupos, data.split]);
+    return Array.from({ length: count }, (_, index) => `Cupo ${index + 1}`);
+  }, [numbers.cupos, data.usage]);
 
   const canContinue =
     step === 0
@@ -192,7 +193,7 @@ export function NewOffer() {
 
             {step === 1 && (
               <div className="space-y-4">
-                <SectionTitle>Precio anual y descuento</SectionTitle>
+                <SectionTitle>Precio anual y ahorro del cliente</SectionTitle>
                 <div className="grid gap-3 sm:grid-cols-2">
                   <div className="space-y-2">
                     <Label htmlFor="annual">Precio de la anualidad (Bs)</Label>
@@ -236,7 +237,7 @@ export function NewOffer() {
                 </div>
 
                 <InfoNote tone="info" icon={Sparkles}>
-                  El cliente siempre ve su ahorro frente a la tarifa mensual. El descuento anual es lo
+                  El cliente siempre ve su ahorro frente a la tarifa mensual. El precio anual es lo
                   que hace atractiva la compra del cupo.
                 </InfoNote>
               </div>
@@ -245,18 +246,33 @@ export function NewOffer() {
             {step === 2 && (
               <div className="space-y-4">
                 <SectionTitle>División en cupos</SectionTitle>
-                <RadioGroup value={data.split} onValueChange={(value) => update("split", value as typeof data.split)}>
+                <RadioGroup value={data.usage} onValueChange={(value) => {
+                const usage = value as typeof data.usage;
+                setData((current) => ({
+                  ...current,
+                  usage,
+                  release: usage === "exclusivo" ? current.release : "completa",
+                }));
+              }}>
                   {[
-                    { value: "periodo", label: "Por periodo", body: "Cada persona cumple 4 meses del año (recomendado)." },
-                    { value: "franja", label: "Por franja horaria", body: "Mañana, tarde o noche para llenar horas valle." },
-                    { value: "personalizada", label: "Personalizada", body: "Tú defines el nombre de cada cupo." },
+                    {
+                    value: "compartido",
+                    label: "Uso compartido, sin fechas (recomendado)",
+                    body: "El servicio admite varias personas a la vez (gimnasio, piscina, clases, parqueo). El cupo solo reparte el precio.",
+                  },
+                    { value: "franja", label: "Por franja horaria", body: "Cada cupo reserva una franja del ciclo (mañana, tarde o noche) para llenar horas valle." },
+                    {
+                    value: "exclusivo",
+                    label: "Por periodo exclusivo",
+                    body: "El recurso solo puede usarse por una persona a la vez (escritorio fijo, lugar asignado). Cada cupo lleva fechas.",
+                  },
                   ].map((option) => (
                     <label
                       key={option.value}
                       htmlFor={`split-${option.value}`}
                       className={cn(
                         "flex cursor-pointer items-start gap-3 rounded-2xl border p-3.5 transition-colors",
-                        data.split === option.value
+                        data.usage === option.value
                           ? "border-primary bg-brand-soft/50"
                           : "border-border/80 bg-card",
                       )}
@@ -279,7 +295,7 @@ export function NewOffer() {
                     onChange={(event) => update("cupos", event.target.value.replace(/\D/g, "").slice(0, 2))}
                   />
                   <p className="text-[11.5px] text-muted-foreground">
-                    Para periodos de 4 meses se recomiendan 3 cupos que cubren el año completo.
+                    Con uso compartido no hay fechas: cada beneficiario usa el servicio cuando quiere, dentro del horario del negocio (3 cupos reparten la anualidad).
                   </p>
                 </div>
 
@@ -351,10 +367,18 @@ export function NewOffer() {
                       htmlFor="rel-escalonada"
                       className={cn(
                         "flex cursor-pointer items-start gap-3 rounded-2xl border p-3.5",
-                        data.release === "escalonada" ? "border-primary bg-brand-soft/50" : "border-border/80 bg-card",
+                        data.release === "escalonada"
+                          ? "border-primary bg-brand-soft/50"
+                          : "border-border/80 bg-card",
+                        data.usage !== "exclusivo" && "cursor-not-allowed opacity-50",
                       )}
                     >
-                      <RadioGroupItem value="escalonada" id="rel-escalonada" className="mt-0.5" />
+                      <RadioGroupItem
+                        value="escalonada"
+                        id="rel-escalonada"
+                        className="mt-0.5"
+                        disabled={data.usage !== "exclusivo"}
+                      />
                       <div>
                         <p className="flex items-center gap-2 text-[13.5px] font-medium text-ink">
                           Liberación escalonada
@@ -364,8 +388,9 @@ export function NewOffer() {
                           </Badge>
                         </p>
                         <p className="text-[11.5px] text-muted-foreground">
-                          Cada cupo se libera al iniciar su periodo. Protege más al cliente y aparece
-                          filtrable en el feed.
+                          {data.usage === "exclusivo"
+                            ? "Cada cupo se libera al iniciar su periodo. Protege más al cliente y aparece filtrable en el feed."
+                            : "Solo disponible cuando los cupos llevan periodo exclusivo: sin fechas no hay nada que escalonar."}
                         </p>
                       </div>
                     </label>
@@ -420,7 +445,11 @@ export function NewOffer() {
                   <div className="flex justify-between gap-3 rounded-xl border border-border/80 px-3.5 py-2.5">
                     <span className="text-muted-foreground">División</span>
                     <span className="font-medium text-ink">
-                      {data.split === "periodo" ? "por periodo" : data.split === "franja" ? "por franja" : "personalizada"}
+                      {data.usage === "exclusivo"
+                      ? "por periodo exclusivo"
+                      : data.usage === "franja"
+                        ? "por franja horaria"
+                        : "uso compartido, sin fechas"}
                     </span>
                   </div>
                 </div>
@@ -508,7 +537,7 @@ export function NewOffer() {
               </p>
               <p className="mt-2 flex items-center gap-1.5 text-[11.5px] text-muted-foreground">
                 <CalendarRange className="size-3.5" aria-hidden="true" />
-                Los periodos se generan automáticamente según la división elegida.
+                Si el cupo lleva periodo, las fechas se generan automáticamente según la división elegida.
               </p>
             </CardContent>
           </Card>

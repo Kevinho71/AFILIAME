@@ -97,6 +97,9 @@ abierto (`/?login=1`).
 - **Una sola barra de cupos**, dividida en tantos tramos como cupos tenga la oferta.
 - **Sin datos de terceros**: nunca se muestra quién ocupa los otros cupos, ni nombres, ni fechas de
   pago ajenas. Solo el agregado (“1 de 3 cupos ocupados”).
+- **Fechas solo cuando el uso es exclusivo**: gimnasio, piscina, parqueo rotativo y clases usan cupos
+  sin fechas (uso compartido o por franja). El detalle está en
+  [`REGLAS-DE-NEGOCIO.md`](./REGLAS-DE-NEGOCIO.md).
 - “Tu pago está protegido” y “Qué pasa después de pagar” quedan compactados en un botón con
   diálogo y en un desplegable, para no ocupar espacio.
 

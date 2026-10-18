@@ -1,8 +1,9 @@
 import { useEffect } from "react";
 import { Link, NavLink, Outlet, useLocation } from "react-router-dom";
-import { Bell, CircleUser, Compass, LayoutList } from "lucide-react";
+import { Bell, CircleUser, Compass, LayoutList, LogOut } from "lucide-react";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
+import { BrandLogo } from "@/components/shared/BrandLogo";
 import { useAppStore } from "@/store/useAppStore";
 import { USER } from "@/lib/data";
 import { initials } from "@/lib/format";
@@ -32,11 +33,8 @@ export function UserShell() {
     <div className="min-h-dvh bg-paper pb-24 md:pb-10">
       <header className="sticky top-0 z-40 border-b border-border/70 bg-paper/90 backdrop-blur">
         <div className="mx-auto flex max-w-[1180px] items-center gap-4 px-4 py-3 sm:px-6">
-          <Link
-            to="/explorar"
-            className="font-display text-[16px] font-bold tracking-[0.16em] text-ink"
-          >
-            AFÍLIAME
+          <Link to="/explorar" className="inline-flex items-center">
+            <BrandLogo className="h-8 w-auto sm:h-9" />
           </Link>
 
           <nav
@@ -80,6 +78,17 @@ export function UserShell() {
             </div>
             <Button asChild size="sm" variant="outline" className="hidden md:inline-flex">
               <Link to="/?login=1">Cambiar de cuenta</Link>
+            </Button>
+            <Button
+              asChild
+              size="icon-sm"
+              variant="ghost"
+              aria-label="Cerrar sesión"
+              title="Cerrar sesión"
+            >
+              <Link to="/">
+                <LogOut className="size-4" aria-hidden="true" />
+              </Link>
             </Button>
           </div>
         </div>

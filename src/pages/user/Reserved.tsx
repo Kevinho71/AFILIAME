@@ -1,4 +1,4 @@
-import { Link, useParams } from "react-router-dom";
+import { Link, useNavigate, useParams } from "react-router-dom";
 import {
   ArrowRight,
   Bell,
@@ -8,22 +8,27 @@ import {
   MessageCircle,
   Share2,
   ShieldCheck,
+  Undo2,
   Users,
 } from "lucide-react";
+import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { CuposProgress } from "@/components/shared/CuposProgress";
 import { EmptyState, InfoNote, MoneyRow, PageHeader, SectionTitle } from "@/components/shared/pieces";
-import { useAppStore } from "@/store/useAppStore";
+import { useAppStore, WITHDRAW_PENALTY, withdrawalRule } from "@/store/useAppStore";
 import { bob, daysLeft, shortDate } from "@/lib/format";
 import { available, cupoById } from "@/lib/selectors";
+import { cupoWhen } from "@/lib/usage";
 
 export function Reserved() {
   const { cupoId } = useParams();
+  const navigate = useNavigate();
   const offers = useAppStore((state) => state.offers);
   const payments = useAppStore((state) => state.payments);
+  const cancelCupo = useAppStore((state) => state.cancelCupo);
   const found = cupoById(offers, cupoId);
 
   if (!found) {
@@ -50,6 +55,26 @@ export function Reserved() {
     `Me sumé a un cupo de ${offer.business} en Afíliame. Faltan ${free} para completar el grupo: ${offer.title} · ${bob(cupo.priceBob)} por ${cupo.label}.`,
   );
 
+  const rule = withdrawalRule(offer, cupo);
+  const penaltyBob = Math.round(cupo.priceBob * WITHDRAW_PENALTY * 100) / 100;
+  const refundBob = Math.round((cupo.priceBob - penaltyBob) * 100) / 100;
+  const canWithdraw = rule === "arrepentimiento" || rule === "penalizado";
+
+  const handleWithdraw = () => {
+    const message =
+      rule === "arrepentimiento"
+        ? `¿Retirar tu pago? Te devolvemos ${bob(cupo.priceBob)} sin penalización.`
+        : `¿Retirar tu pago? Recibirías ${bob(refundBob)} (penalización del 2%).`;
+    if (!window.confirm(message)) return;
+    const result = cancelCupo(cupo.id);
+    if (!result) {
+      toast.error("No pudimos retirar tu pago");
+      return;
+    }
+    toast.success("Pago retirado", { description: `Te devolvemos ${bob(result.refundBob)}.` });
+    navigate("/mis-cupos");
+  };
+
   return (
     <div className="space-y-5">
       <PageHeader
@@ -68,7 +93,7 @@ export function Reserved() {
                 <div className="min-w-0">
                   <p className="font-display text-[19px] leading-tight">{offer.business}</p>
                   <p className="text-[12.5px] text-muted-foreground">
-                    {cupo.label} · {shortDate(cupo.start)} al {shortDate(cupo.end)}
+                    {cupo.label} · {cupoWhen(offer, cupo)}
                   </p>
                   <div className="mt-2 flex flex-wrap items-center gap-1.5">
                     <Badge variant="info">
@@ -112,7 +137,7 @@ export function Reserved() {
             <ol className="space-y-2">
               {[
                 "Tu pago queda protegido y no llega al negocio todavía.",
-                `Si el grupo se completa antes del ${shortDate(offer.deadline)}, el negocio cobra el año completo y tu pase digital queda listo.`,
+                `Si el grupo se completa antes del ${shortDate(offer.deadline)}, el negocio cobra el año completo y tu código de activación queda listo.`,
                 "Si no se completa, te devolvemos el pago completo en 24 a 72 horas hábiles, sin comisión.",
               ].map((item, index) => (
                 <li key={item} className="flex gap-3 rounded-xl border border-border/80 bg-card p-3.5">
@@ -124,6 +149,47 @@ export function Reserved() {
               ))}
             </ol>
           </div>
+
+          <Card className={canWithdraw ? "border-brand/30" : "border-warn/30 bg-warn-soft/30"}>
+            <CardContent className="p-5">
+              <p className="flex items-center gap-2 text-[14px] font-semibold text-ink">
+                <Undo2 className="size-4 text-brand" aria-hidden="true" />
+                Retirar mi pago
+              </p>
+              {rule === "arrepentimiento" && (
+                <p className="mt-1.5 text-pretty text-[12.5px] leading-relaxed text-muted-foreground">
+                  Estás dentro de las 24 horas: te devolvemos el 100% ({bob(cupo.priceBob)}), sin
+                  penalización.
+                </p>
+              )}
+              {rule === "penalizado" && (
+                <p className="mt-1.5 text-pretty text-[12.5px] leading-relaxed text-muted-foreground">
+                  Puedes retirar con una penalización del 2% ({bob(penaltyBob)}). Recibirías{" "}
+                  {bob(refundBob)}.
+                </p>
+              )}
+              {rule === "solo_cesion" && (
+                <p className="mt-1.5 text-pretty text-[12.5px] leading-relaxed text-muted-foreground">
+                  Ya no puedes retirar: quedan 3 días o menos para el cierre. La única opción es
+                  ceder tu cupo a otra persona.
+                </p>
+              )}
+              <Button
+                className="mt-3 w-full"
+                variant={canWithdraw ? "default" : "outline"}
+                disabled={!canWithdraw}
+                onClick={handleWithdraw}
+              >
+                <Undo2 className="size-4" aria-hidden="true" />
+                {canWithdraw ? "Retirar mi pago" : "Solo puedes ceder tu cupo"}
+              </Button>
+              {canWithdraw && (
+                <p className="mt-2 text-[11px] leading-relaxed text-muted-foreground">
+                  Si retiras, el cupo vuelve a quedar libre para otra persona.
+                </p>
+              )}
+            </CardContent>
+          </Card>
 
           <InfoNote tone="info" icon={Bell}>
             Tienes 24 horas para arrepentirte sin penalización: si cancelas, te devolvemos todo aunque
@@ -140,7 +206,7 @@ export function Reserved() {
               </p>
               <p className="mt-1 text-pretty text-[12.5px] leading-relaxed text-muted-foreground">
                 Comparte la oferta por WhatsApp: mientras más rápido se llenen los cupos, antes se
-                libera el pago al negocio y se emite tu pase.
+                libera el pago al negocio y se emite tu código.
               </p>
               <Button asChild className="mt-3 w-full">
                 <a href={`https://wa.me/?text=${shareText}`} target="_blank" rel="noreferrer">
@@ -169,7 +235,7 @@ export function Reserved() {
           {complete ? (
             <Button className="w-full" asChild>
               <Link to={`/pase/${cupo.id}`}>
-                Ver mi pase digital
+                Ver mi código de activación
                 <ArrowRight className="size-4" aria-hidden="true" />
               </Link>
             </Button>

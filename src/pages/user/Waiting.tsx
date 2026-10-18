@@ -64,13 +64,13 @@ export function Waiting() {
                   <div>
                     <p className="font-display text-[20px] leading-tight">¡Se completaron los cupos!</p>
                     <p className="mt-1 text-pretty text-[13px] leading-relaxed text-muted-foreground">
-                      El negocio ya recibió el pago del año completo y los pases digitales están
-                      emitidos.
+                      El negocio ya recibió el pago del año completo y los códigos de activación
+                      están listos.
                     </p>
                     {myCupo && (
                       <Button className="mt-3" asChild>
                         <Link to={`/pase/${myCupo.id}`}>
-                          Ver mi pase digital
+                          Ver mi código de activación
                           <ArrowRight className="size-4" aria-hidden="true" />
                         </Link>
                       </Button>
@@ -147,8 +147,8 @@ export function Waiting() {
             <CardContent className="p-4">
               <p className="text-[13.5px] font-semibold text-ink">Invita a completar el grupo</p>
               <p className="mt-1 text-pretty text-[12.5px] leading-relaxed text-muted-foreground">
-                Cada cupo que se ocupa acerca el momento en que el negocio cobra y tu pase queda
-                listo.
+                Cada cupo que se ocupa acerca el momento en que el negocio cobra y tu código de
+                activación queda listo.
               </p>
               <Button asChild className="mt-3 w-full">
                 <a

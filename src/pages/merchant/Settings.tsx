@@ -57,7 +57,7 @@ export function Settings() {
                 },
                 {
                   name: "Sofía Ríos",
-                  role: "Recepción · solo validar pases",
+                  role: "Recepción · solo activar cupos",
                   icon: ScanLine,
                   badge: "Validador",
                 },
@@ -98,7 +98,7 @@ export function Settings() {
               Invitar a un validador
             </Button>
             <InfoNote tone="neutral" className="mt-3" icon={ShieldCheck}>
-              El rol Validador solo escanea pases y consulta habilitación: no ve montos ni datos
+              El rol Validador solo escanea códigos y activa cupos: no ve montos ni datos
               bancarios.
             </InfoNote>
           </CardContent>

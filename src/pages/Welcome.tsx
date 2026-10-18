@@ -19,7 +19,8 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { LoginDialog, type LoginMode } from "@/components/auth/LoginDialog";
+import { LoginDialog, type AuthView, type LoginMode } from "@/components/auth/LoginDialog";
+import { BrandLogo } from "@/components/shared/BrandLogo";
 import { BusinessMark } from "@/components/shared/BusinessMark";
 import { CuposProgress } from "@/components/shared/CuposProgress";
 import { OfferStatusPill } from "@/components/shared/status";
@@ -36,7 +37,7 @@ const STEPS = [
   {
     icon: Sparkles,
     title: "Elige tu cupo",
-    body: "Filtra por ciudad, precio y periodo. Cada cupo tiene su propio intervalo: 4 meses, una temporada o una franja horaria.",
+    body: "Filtra por ciudad, precio y tipo de uso. Hay cupos de uso compartido (sin fecha fija) y cupos por periodo o franja, cuando el recurso no se puede compartir.",
   },
   {
     icon: QrCode,
@@ -50,8 +51,8 @@ const STEPS = [
   },
   {
     icon: CalendarCheck,
-    title: "Usa tu pase digital",
-    body: "Recibes tu pase con QR para entrar. Si el grupo no se completa, el reembolso vuelve solo a tu cuenta de origen.",
+    title: "Activa tu cupo una sola vez",
+    body: "Recibes un código de activación de un solo uso. En recepción lo escanean, te inscriben y entras con el sistema del local.",
   },
 ];
 
@@ -62,15 +63,18 @@ export function Welcome() {
   const setRole = useAppStore((state) => state.setRole);
   const [loginOpen, setLoginOpen] = useState(false);
   const [loginMode, setLoginMode] = useState<LoginMode>("user");
+  const [loginView, setLoginView] = useState<AuthView>("signup");
 
   useEffect(() => {
     if (searchParams.get("login") === "1") {
       setLoginMode(role === "merchant" ? "merchant" : "user");
+      setLoginView("login");
       setLoginOpen(true);
     }
   }, [searchParams, role]);
 
-  const openLogin = (mode: LoginMode) => {
+  const openLogin = (view: AuthView, mode: LoginMode) => {
+    setLoginView(view);
     setLoginMode(mode);
     setLoginOpen(true);
   };
@@ -82,9 +86,7 @@ export function Welcome() {
     <div className="min-h-dvh bg-paper">
       <header className="sticky top-0 z-40 border-b border-border/70 bg-paper/85 backdrop-blur">
         <div className="mx-auto flex max-w-[1180px] items-center gap-4 px-4 py-3 sm:px-6">
-          <span className="font-display text-[19px] font-bold tracking-[0.16em] text-ink">
-            AFÍLIAME
-          </span>
+          <BrandLogo className="h-9 w-auto" />
           <nav className="ml-4 hidden items-center gap-6 text-[13px] text-muted-foreground md:flex">
             <a href="#precio" className="transition-colors hover:text-ink">
               Anualidad vs. mensualidades
@@ -97,10 +99,10 @@ export function Welcome() {
             </a>
           </nav>
           <div className="ml-auto flex items-center gap-2">
-            <Button variant="ghost" size="sm" onClick={() => openLogin("user")}>
+            <Button variant="ghost" size="sm" onClick={() => openLogin("login", "user")}>
               Ingresar
             </Button>
-            <Button size="sm" onClick={() => openLogin("user")}>
+            <Button size="sm" onClick={() => openLogin("signup", "user")}>
               Registrarme
             </Button>
           </div>
@@ -135,12 +137,12 @@ export function Welcome() {
 
               <p className="mt-5 max-w-xl text-pretty text-[15px] leading-relaxed text-muted-foreground sm:text-[16px]">
                 Gimnasios, coworkings, clubes y academias publican su anualidad dividida en cupos. Tú
-                te afilias al periodo que necesitas y pagas <span className="text-ink">solo esos meses</span>,
+                te afilias al cupo que necesitas y pagas <span className="text-ink">solo tu parte</span>,
                 pero al precio de anualidad. Sin tarjetas, sin claves, sin letras chiquitas.
               </p>
 
               <div className="mt-7 flex flex-wrap items-center gap-3">
-                <Button size="xl" onClick={() => openLogin("user")}>
+                <Button size="xl" onClick={() => openLogin("signup", "user")}>
                   Registrarme gratis
                   <ArrowRight className="size-4" aria-hidden="true" />
                 </Button>
@@ -186,12 +188,12 @@ export function Welcome() {
 
                     <div className="mt-4 grid grid-cols-2 gap-3">
                       <div className="rounded-xl border border-brand/30 bg-brand-soft/60 p-3.5">
-                        <p className="text-[11px] text-brand">Tu cupo · 4 meses</p>
+                        <p className="text-[11px] text-brand">Tu cupo</p>
                         <p className="num mt-1 font-display text-[24px] leading-none text-ink">
                           {bob(CUPO)}
                         </p>
                         <p className="mt-1 text-[11px] text-muted-foreground">
-                          en vez de {bob(MONTHLY * SHARED_MONTHS)} pagando mensual
+                          frente a {bob(MONTHLY * SHARED_MONTHS)} pagando mes a mes
                         </p>
                       </div>
                       <div className="rounded-xl border border-border/80 bg-secondary/60 p-3.5">
@@ -307,7 +309,7 @@ export function Welcome() {
                       {bob(CUPO)}
                     </p>
                     <p className="mt-1 text-[11.5px] text-muted-foreground">
-                      {SHARED_MONTHS} meses · {bob(cupoSavings)} menos que pagarlos sueltos
+                      una parte igual de la anualidad · {bob(cupoSavings)} menos que pagar mes a mes
                     </p>
                   </div>
                   <ul className="mt-4 space-y-2 text-[12.5px] text-muted-foreground">
@@ -344,11 +346,11 @@ export function Welcome() {
               de más y nadie tiene que confiar en la palabra del otro.
             </p>
             <div className="mt-7 flex flex-wrap items-center justify-center gap-3">
-              <Button size="xl" onClick={() => openLogin("user")}>
+              <Button size="xl" onClick={() => openLogin("signup", "user")}>
                 Quiero mi cupo
                 <ArrowRight className="size-4" aria-hidden="true" />
               </Button>
-              <Button size="xl" variant="outline" onClick={() => openLogin("merchant")}>
+              <Button size="xl" variant="outline" onClick={() => openLogin("signup", "merchant")}>
                 <Store className="size-4" aria-hidden="true" />
                 Tengo un negocio
               </Button>
@@ -363,7 +365,7 @@ export function Welcome() {
               Paso a paso
             </p>
             <h2 className="mt-3 text-balance font-display text-[clamp(1.6rem,3.6vw,2.4rem)] leading-tight">
-              Cuatro pasos entre tu precio y tu pase
+              Cuatro pasos entre tu precio y tu código
             </h2>
 
             <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
@@ -412,10 +414,10 @@ export function Welcome() {
                   </p>
                   <ul className="mt-4 space-y-2.5 text-[13px] leading-relaxed text-muted-foreground">
                     {[
-                      "Precio de anualidad con compromiso corto: 4 meses, una temporada o una franja horaria.",
+                      "Precio de anualidad sin pagar el año completo: te afilias solo a tu parte.",
                       "Pagas por QR en bolivianos, sin tarjetas ni comisiones extra para ti.",
                       "Tu dinero queda en garantía: si el grupo no se completa, se devuelve automáticamente.",
-                      "Pase digital con QR para entrar, con tus fechas, reglas y ubicación.",
+                      "Código de activación de un solo uso: lo muestras en recepción y el local te inscribe.",
                       "Puedes ceder tu cupo con aprobación del negocio si ya no lo usarás.",
                     ].map((item) => (
                       <li key={item} className="flex gap-2.5">
@@ -424,7 +426,7 @@ export function Welcome() {
                       </li>
                     ))}
                   </ul>
-                  <Button className="mt-5 w-full" onClick={() => openLogin("user")}>
+                  <Button className="mt-5 w-full" onClick={() => openLogin("signup", "user")}>
                     Crear mi cuenta gratis
                     <ArrowRight className="size-4" aria-hidden="true" />
                   </Button>
@@ -446,7 +448,7 @@ export function Welcome() {
                       "Más clientes: atrae a quien nunca compraría una anualidad completa.",
                       "Llenas capacidad ociosa con cupos por franja horaria a menor precio.",
                       "Tu saldo queda disponible en una billetera: mantenerlo, retirarlo a tu banco o pagar un QR.",
-                      "Panel con llenado, clientes nuevos e ingresos anticipados, más validación de accesos.",
+                      "Panel con llenado, clientes nuevos e ingresos anticipados, más activación de cupos.",
                     ].map((item) => (
                       <li key={item} className="flex gap-2.5">
                         <Check className="mt-0.5 size-4 shrink-0 text-brand" aria-hidden="true" />
@@ -454,7 +456,7 @@ export function Welcome() {
                       </li>
                     ))}
                   </ul>
-                  <Button className="mt-5 w-full" variant="outline" onClick={() => openLogin("merchant")}>
+                  <Button className="mt-5 w-full" variant="outline" onClick={() => openLogin("signup", "merchant")}>
                     Registrar mi negocio
                     <ArrowRight className="size-4" aria-hidden="true" />
                   </Button>
@@ -524,11 +526,11 @@ export function Welcome() {
               cupos y cobra por adelantado.
             </p>
             <div className="mt-7 flex flex-wrap items-center justify-center gap-3">
-              <Button size="xl" onClick={() => openLogin("user")}>
+              <Button size="xl" onClick={() => openLogin("signup", "user")}>
                 <BadgeCheck className="size-4" aria-hidden="true" />
                 Registrarme
               </Button>
-              <Button size="xl" variant="outline" onClick={() => openLogin("merchant")}>
+              <Button size="xl" variant="outline" onClick={() => openLogin("signup", "merchant")}>
                 <Coins className="size-4" aria-hidden="true" />
                 Quiero vender cupos
               </Button>
@@ -541,7 +543,7 @@ export function Welcome() {
         <div className="mx-auto max-w-[1180px] px-4 py-10 sm:px-6">
           <div className="flex flex-wrap items-start justify-between gap-6">
             <div>
-              <p className="font-display text-[17px] font-bold tracking-[0.16em] text-ink">AFÍLIAME</p>
+              <BrandLogo className="h-9 w-auto" />
               <p className="mt-2 max-w-sm text-[12.5px] leading-relaxed text-muted-foreground">
                 Anualidades compartidas con pago protegido. Compras meses, no años completos.
               </p>
@@ -603,7 +605,7 @@ export function Welcome() {
         </div>
       </footer>
 
-      <LoginDialog open={loginOpen} onOpenChange={setLoginOpen} mode={loginMode} />
+      <LoginDialog open={loginOpen} onOpenChange={setLoginOpen} mode={loginMode} view={loginView} />
     </div>
   );
 }

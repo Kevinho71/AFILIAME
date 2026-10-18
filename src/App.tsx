@@ -1,7 +1,6 @@
 import { BrowserRouter, Route, Routes, useLocation } from "react-router-dom";
 import { useEffect } from "react";
 import { Toaster } from "@/components/ui/toaster";
-import { DemoPanel } from "@/components/layout/DemoPanel";
 import { UserShell } from "@/components/layout/UserShell";
 import { MerchantShell } from "@/components/layout/MerchantShell";
 
@@ -30,6 +29,7 @@ import { NewOffer } from "@/pages/merchant/NewOffer";
 import { Offers } from "@/pages/merchant/Offers";
 import { OfferManage } from "@/pages/merchant/OfferManage";
 import { WalletPage } from "@/pages/merchant/WalletPage";
+import { Deposit } from "@/pages/merchant/Deposit";
 import { Withdraw } from "@/pages/merchant/Withdraw";
 import { PayQr } from "@/pages/merchant/PayQr";
 import { Validate } from "@/pages/merchant/Validate";
@@ -43,14 +43,6 @@ function ScrollToTop() {
     window.scrollTo({ top: 0, behavior: "auto" });
   }, [pathname]);
   return null;
-}
-
-const LANDING_ROUTES = ["/", "/bienvenida", "/registro"];
-
-function DemoPanelGate() {
-  const { pathname } = useLocation();
-  if (LANDING_ROUTES.includes(pathname)) return null;
-  return <DemoPanel />;
 }
 
 export function App() {
@@ -87,6 +79,7 @@ export function App() {
               <Route path="/panel/ofertas/nueva" element={<NewOffer />} />
               <Route path="/panel/ofertas/:offerId" element={<OfferManage />} />
               <Route path="/panel/billetera" element={<WalletPage />} />
+              <Route path="/panel/billetera/depositar" element={<Deposit />} />
               <Route path="/panel/billetera/retirar" element={<Withdraw />} />
               <Route path="/panel/billetera/pagar-qr" element={<PayQr />} />
               <Route path="/panel/validar" element={<Validate />} />
@@ -99,7 +92,6 @@ export function App() {
             <Route path="*" element={<NotFound />} />
           </Routes>
         </div>
-        <DemoPanelGate />
       </div>
       <Toaster />
     </BrowserRouter>

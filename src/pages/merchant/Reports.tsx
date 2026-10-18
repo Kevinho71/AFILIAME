@@ -182,7 +182,7 @@ export function Reports() {
 
       <div>
         <SectionTitle hint="Detalle de cada oferta">Rendimiento por oferta</SectionTitle>
-        <Card>
+        <Card className="hidden md:block">
           <CardContent className="p-0">
             <Table>
               <TableHeader>
@@ -226,6 +226,44 @@ export function Reports() {
             </Table>
           </CardContent>
         </Card>
+
+        {/* Móvil: tarjetas */}
+        <div className="space-y-2.5 md:hidden">
+          {mine.map((offer) => {
+            const escrow = offer.cupos.reduce((sum, cupo) => sum + (cupo.escrowUsdc ?? 0), 0);
+            return (
+              <Card key={offer.id}>
+                <CardContent className="p-3.5">
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="min-w-0">
+                      <p className="text-[13px] font-medium text-ink">{offer.title}</p>
+                      <p className="mt-0.5 text-[11.5px] text-muted-foreground">{offer.business}</p>
+                    </div>
+                    <OfferStatusPill status={offer.status} />
+                  </div>
+                  <div className="mt-3 grid grid-cols-2 gap-2 text-[12px]">
+                    <div className="rounded-lg bg-secondary/60 px-2.5 py-2">
+                      <p className="text-[10.5px] uppercase tracking-wide text-muted-foreground">Llenado</p>
+                      <p className="num mt-0.5 font-medium text-ink">{paidCount(offer)}/{offer.cupos.length}</p>
+                    </div>
+                    <div className="rounded-lg bg-secondary/60 px-2.5 py-2">
+                      <p className="text-[10.5px] uppercase tracking-wide text-muted-foreground">En garantía</p>
+                      <p className="num mt-0.5 font-medium text-ink">{usdc(Math.round(escrow * 100) / 100)}</p>
+                    </div>
+                    <div className="rounded-lg bg-secondary/60 px-2.5 py-2">
+                      <p className="text-[10.5px] uppercase tracking-wide text-muted-foreground">Liberado</p>
+                      <p className="num mt-0.5 font-medium text-ink">{offer.netUsdc ? usdc(offer.netUsdc) : "—"}</p>
+                    </div>
+                    <div className="rounded-lg bg-secondary/60 px-2.5 py-2">
+                      <p className="text-[10.5px] uppercase tracking-wide text-muted-foreground">Comisión</p>
+                      <p className="num mt-0.5 font-medium text-muted-foreground">{offer.feeUsdc ? usdc(offer.feeUsdc) : "—"}</p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            );
+          })}
+        </div>
       </div>
 
       <div className="grid gap-3 sm:grid-cols-3">

@@ -17,6 +17,7 @@ import { EmptyState, InfoNote, MoneyRow, PageHeader, SectionTitle } from "@/comp
 import { useAppStore } from "@/store/useAppStore";
 import { bob, shortDate } from "@/lib/format";
 import { offerById } from "@/lib/selectors";
+import { cupoWhen } from "@/lib/usage";
 
 const hash = (seed: string) => {
   let value = 0;
@@ -119,7 +120,7 @@ export function Guarantee() {
                   <TableHeader>
                     <TableRow>
                       <TableHead>Cupo</TableHead>
-                      <TableHead>Periodo</TableHead>
+                      <TableHead>Uso</TableHead>
                       <TableHead>Fecha de pago</TableHead>
                       <TableHead className="text-right">Monto</TableHead>
                       <TableHead className="text-right">Registro</TableHead>
@@ -132,7 +133,7 @@ export function Guarantee() {
                           Cupo {cupo.index + 1}
                           {cupo.mine && <span className="ml-1.5 text-[11px] text-brand">(tuyo)</span>}
                         </TableCell>
-                        <TableCell className="text-[12.5px]">{cupo.label}</TableCell>
+                        <TableCell className="text-[12.5px]">{cupoWhen(offer, cupo)}</TableCell>
                         <TableCell className="num text-[12.5px]">{cupo.paidAt ?? "—"}</TableCell>
                         <TableCell className="num text-right text-[12.5px]">{bob(cupo.priceBob)}</TableCell>
                         <TableCell className="text-right">
@@ -148,7 +149,7 @@ export function Guarantee() {
                       .map((cupo) => (
                         <TableRow key={cupo.id} className="opacity-60">
                           <TableCell className="text-[12.5px]">Cupo {cupo.index + 1}</TableCell>
-                          <TableCell className="text-[12.5px]">{cupo.label}</TableCell>
+                          <TableCell className="text-[12.5px]">{cupoWhen(offer, cupo)}</TableCell>
                           <TableCell className="text-[12.5px]">Pago pendiente</TableCell>
                           <TableCell className="num text-right text-[12.5px]">
                             {bob(cupo.priceBob)} pendientes

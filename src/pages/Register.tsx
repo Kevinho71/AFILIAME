@@ -7,6 +7,7 @@ import {
   Camera,
   CheckCircle2,
   CreditCard,
+  Landmark,
   Phone,
   ShieldCheck,
   Sparkles,
@@ -18,6 +19,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
+import { Separator } from "@/components/ui/separator";
 import { GuaranteeSteps } from "@/components/shared/GuaranteeSteps";
 import { DemoTip, InfoNote } from "@/components/shared/pieces";
 import { cn } from "@/lib/utils";
@@ -30,8 +32,16 @@ export function Register() {
   const [phone, setPhone] = useState("");
   const [carnet, setCarnet] = useState(false);
   const [selfie, setSelfie] = useState(false);
+  const [bank, setBank] = useState("Fassil");
+  const [accountType, setAccountType] = useState("Ahorro");
+  const [account, setAccount] = useState("");
 
-  const canContinue = step === 0 ? phone.trim().length >= 7 : carnet && selfie;
+  const canContinue =
+    step === 0
+      ? phone.trim().length >= 7
+      : step === 1
+        ? carnet && selfie && account.trim().length >= 4
+        : false;
 
   return (
     <div className="mx-auto max-w-[560px] px-4 py-8 sm:px-6">
@@ -99,7 +109,7 @@ export function Register() {
             <div className="mt-4 space-y-3">
               <p className="text-[13px] leading-relaxed text-muted-foreground">
                 La verificación es obligatoria antes de pagar: cada cupo se asigna a una persona
-                identificada y el pase no es transferible sin aprobación del negocio.
+                identificada y el cupo no es transferible sin aprobación del negocio.
               </p>
               {[
                 {
@@ -158,6 +168,61 @@ export function Register() {
                   </button>
                 );
               })}
+
+              <Separator className="my-2" />
+
+              <p className="flex items-center gap-2 text-[13px] font-medium text-ink">
+                <Landmark className="size-4 text-brand/70" aria-hidden="true" />
+                Cuenta bancaria de devolución
+              </p>
+              <p className="text-[12px] leading-relaxed text-muted-foreground">
+                Aquí te devolvemos el dinero si el grupo no se completa o si retiras tu pago. No es
+                un QR, es tu cuenta.
+              </p>
+
+              <div className="grid gap-3 sm:grid-cols-2">
+                <div className="space-y-2">
+                  <Label htmlFor="bank">Banco</Label>
+                  <select
+                    id="bank"
+                    value={bank}
+                    onChange={(event) => setBank(event.target.value)}
+                    className="h-11 w-full rounded-xl border border-input bg-card px-3 text-[15px]"
+                  >
+                    <option value="Fassil">Banco Fassil</option>
+                    <option value="BNB">Banco Nacional de Bolivia</option>
+                    <option value="Union">Banco Unión</option>
+                    <option value="Mercantil">Banco Mercantil Santa Cruz</option>
+                  </select>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="acc-type">Tipo de cuenta</Label>
+                  <select
+                    id="acc-type"
+                    value={accountType}
+                    onChange={(event) => setAccountType(event.target.value)}
+                    className="h-11 w-full rounded-xl border border-input bg-card px-3 text-[15px]"
+                  >
+                    <option value="Ahorro">Cuenta de ahorro</option>
+                    <option value="Corriente">Cuenta corriente</option>
+                  </select>
+                </div>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="acc">Número de cuenta</Label>
+                <Input
+                  id="acc"
+                  inputMode="numeric"
+                  placeholder="0000 0000 7713"
+                  value={account}
+                  onChange={(event) => setAccount(event.target.value.replace(/\D/g, ""))}
+                />
+              </div>
+              <InfoNote>
+                La cuenta debe estar a tu nombre. Los reembolsos vuelven a esta cuenta en 24 a 72
+                horas hábiles.
+              </InfoNote>
+
               <DemoTip>
                 La verificación se completa con tu carnet y una selfie; en esta versión se marca como cargada al instante.
               </DemoTip>

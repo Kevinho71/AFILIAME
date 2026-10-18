@@ -7,6 +7,7 @@ import {
   Flag,
   Info,
   MapPin,
+  ScanLine,
   ShieldCheck,
   Sparkles,
 } from "lucide-react";
@@ -19,6 +20,7 @@ import { DemoTip, EmptyState, InfoNote, PageHeader, SectionTitle } from "@/compo
 import { useAppStore } from "@/store/useAppStore";
 import { bob, shortDate } from "@/lib/format";
 import { cupoById } from "@/lib/selectors";
+import { hasPeriod } from "@/lib/usage";
 
 function buildIcs(offerTitle: string, location: string, start: string, end: string) {
   const stamp = (iso: string) => `${iso.replace(/-/g, "")}T090000`;
@@ -46,8 +48,8 @@ export function Pass() {
     return (
       <EmptyState
         icon={Compass}
-        title="No encontramos ese pase"
-        description="Vuelve a Mis cupos para ver tus pases disponibles."
+        title="No encontramos ese código"
+        description="Vuelve a Mis cupos para ver tus códigos de activación disponibles."
         action={
           <Button asChild>
             <Link to="/mis-cupos">Ver Mis cupos</Link>
@@ -58,11 +60,13 @@ export function Pass() {
   }
 
   const { offer, cupo } = found;
-  const issued = ["liberada", "en_curso"].includes(offer.status) || cupo.status === "activo";
-  const active = cupo.status === "activo";
+  const activated = cupo.status === "activado";
+  const ready = cupo.status === "emitido";
 
   const download = () => {
-    const blob = new Blob([buildIcs(offer.title, offer.address, cupo.start, cupo.end)], {
+    const from = hasPeriod(offer, cupo) && cupo.start ? cupo.start : offer.validFrom;
+    const to = hasPeriod(offer, cupo) && cupo.end ? cupo.end : offer.validTo;
+    const blob = new Blob([buildIcs(offer.title, offer.address, from, to)], {
       type: "text/calendar;charset=utf-8",
     });
     const url = URL.createObjectURL(blob);
@@ -71,18 +75,38 @@ export function Pass() {
     link.download = `cupo-${offer.id}.ics`;
     link.click();
     URL.revokeObjectURL(url);
-    toast.success("Evento descargado", { description: "Se agregó el periodo de tu cupo al calendario." });
+    toast.success("Evento descargado", {
+      description: hasPeriod(offer, cupo)
+        ? "Se agregó el periodo de tu cupo al calendario."
+        : "Se agregó la vigencia de tu anualidad al calendario.",
+    });
   };
 
   return (
     <div className="space-y-5">
       <PageHeader
-        title={active ? "Acceso listo" : issued ? "Pase emitido" : "Tu cupo reservado"}
+        title={activated ? "Cupo activado" : ready ? "Tu código de activación" : "Tu cupo reservado"}
         subtitle={`${offer.business} · ${cupo.label}`}
         back="/mis-cupos"
       />
 
-      {issued && (
+      {activated ? (
+        <Card className="relative overflow-hidden border-success/25 bg-success-soft/50">
+          <CardContent className="p-5">
+            <div className="flex items-center gap-3">
+              <span className="flex size-12 shrink-0 items-center justify-center rounded-full bg-success text-primary-foreground">
+                <BadgeCheck className="size-6" aria-hidden="true" />
+              </span>
+              <div>
+                <p className="font-display text-[18px] leading-tight">Cupo activado</p>
+                <p className="text-[12.5px] text-muted-foreground">
+                  El negocio te inscribió en su sistema. Entra como te indique.
+                </p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      ) : ready ? (
         <Card className="relative overflow-hidden border-success/25 bg-success-soft/50">
           <CardContent className="p-5">
             <div className="flex items-center gap-3">
@@ -93,13 +117,13 @@ export function Pass() {
               <div>
                 <p className="font-display text-[18px] leading-tight">Grupo completo</p>
                 <p className="text-[12.5px] text-muted-foreground">
-                  La garantía se liberó al negocio y tu pase está {active ? "activo" : "emitido"}.
+                  La garantía se liberó al negocio y tu código de activación está listo.
                 </p>
               </div>
             </div>
           </CardContent>
         </Card>
-      )}
+      ) : null}
 
       <PassCard offer={offer} cupo={cupo} />
 
@@ -120,33 +144,65 @@ export function Pass() {
       </div>
 
       <div>
-        <SectionTitle>Cómo entrar</SectionTitle>
+        <SectionTitle>{activated ? "Qué sigue" : "Cómo activar tu cupo"}</SectionTitle>
         <div className="space-y-2">
-          {[
-            { icon: DoorOpen, title: "Muestra el QR en recepción", body: "El validador lo escanea y confirma que estás habilitado." },
-            { icon: BadgeCheck, title: "Pase nominal", body: `El pase está a nombre de ${cupo.participant?.name ?? "el beneficiario"}.` },
-            { icon: MapPin, title: "Ubicación y horario", body: `${offer.address} · ${offer.hours}` },
-          ].map((item) => {
-            const Icon = item.icon;
-            return (
-              <div key={item.title} className="flex gap-3 rounded-xl border border-border/80 bg-card p-3.5">
-                <Icon className="mt-0.5 size-4 shrink-0 text-brand/70" aria-hidden="true" />
-                <div>
-                  <p className="text-[13.5px] font-medium text-ink">{item.title}</p>
-                  <p className="text-pretty text-[12px] leading-relaxed text-muted-foreground">
-                    {item.body}
-                  </p>
-                </div>
-              </div>
-            );
-          })}
+          {activated ? (
+            <>
+              {[
+                { icon: BadgeCheck, title: "Ya estás inscrito", body: `El negocio te registró con su propio método (huella, tarjeta, lista…).` },
+                { icon: DoorOpen, title: "Entra como te indique", body: `A partir de ahora usas el sistema del negocio, no la app.` },
+                { icon: MapPin, title: "Ubicación y horario", body: `${offer.address} · ${offer.hours}` },
+              ].map((item) => {
+                const Icon = item.icon;
+                return (
+                  <div key={item.title} className="flex gap-3 rounded-xl border border-border/80 bg-card p-3.5">
+                    <Icon className="mt-0.5 size-4 shrink-0 text-brand/70" aria-hidden="true" />
+                    <div>
+                      <p className="text-[13.5px] font-medium text-ink">{item.title}</p>
+                      <p className="text-pretty text-[12px] leading-relaxed text-muted-foreground">
+                        {item.body}
+                      </p>
+                    </div>
+                  </div>
+                );
+              })}
+            </>
+          ) : (
+            <>
+              {[
+                { icon: DoorOpen, title: "Ve al negocio", body: "La primera vez que vayas, muestra el código en recepción." },
+                { icon: ScanLine, title: "El negocio lo escanea", body: "Confirma que eres la persona que pagó, viendo tu nombre e identidad verificada." },
+                { icon: BadgeCheck, title: "Queda inutilizable", body: `El código se usa una sola vez y el negocio te inscribe con su propio sistema.` },
+              ].map((item) => {
+                const Icon = item.icon;
+                return (
+                  <div key={item.title} className="flex gap-3 rounded-xl border border-border/80 bg-card p-3.5">
+                    <Icon className="mt-0.5 size-4 shrink-0 text-brand/70" aria-hidden="true" />
+                    <div>
+                      <p className="text-[13.5px] font-medium text-ink">{item.title}</p>
+                      <p className="text-pretty text-[12px] leading-relaxed text-muted-foreground">
+                        {item.body}
+                      </p>
+                    </div>
+                  </div>
+                );
+              })}
+            </>
+          )}
         </div>
       </div>
 
-      {!active && (
+      {ready && offer.usage === "exclusivo" && cupo.start && (
         <InfoNote tone="info" icon={Info}>
-          Tu periodo empieza el {shortDate(cupo.start)}. El pase se activa solo ese día; puedes
-          mostrarlo igual para verificar tus datos.
+          Tu periodo empieza el {shortDate(cupo.start)}. Puedes activar tu cupo desde ese día en
+          recepción.
+        </InfoNote>
+      )}
+
+      {ready && offer.usage !== "exclusivo" && (
+        <InfoNote tone="info" icon={Info}>
+          Activa tu cupo en recepción cuando empieces a ir. Es un código de un solo uso: después
+          entras con el sistema del negocio.
         </InfoNote>
       )}
 
@@ -166,12 +222,14 @@ export function Pass() {
 
       <div className="flex flex-wrap items-center gap-2">
         <Badge variant="outline">Cupo pagado {bob(cupo.priceBob)}</Badge>
-        <Badge variant="outline">Periodo {cupo.label}</Badge>
-        <Badge variant="soft">Pase digital</Badge>
+        <Badge variant="outline">{cupo.label}</Badge>
+        <Badge variant="soft">{activated ? "Cupo activado" : "Código de activación"}</Badge>
       </div>
 
       <DemoTip>
-        Muestra este pase en recepción desde el primer día de tu periodo.
+        {activated
+          ? "Este cupo ya fue activado por el negocio. Entra con el sistema del negocio."
+          : "Muestra este código una sola vez en recepción cuando empieces a ir."}
       </DemoTip>
     </div>
   );

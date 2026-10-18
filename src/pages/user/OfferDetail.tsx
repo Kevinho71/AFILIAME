@@ -35,6 +35,7 @@ import {
 import { BusinessMark } from "@/components/shared/BusinessMark";
 import { GuaranteeSteps } from "@/components/shared/GuaranteeSteps";
 import { CuposProgress } from "@/components/shared/CuposProgress";
+import { ReleaseModeIndicator } from "@/components/shared/ReleaseMode";
 import { CupoStatusPill, OfferStatusPill } from "@/components/shared/status";
 import { EmptyState, MoneyRow, PageHeader, SectionTitle } from "@/components/shared/pieces";
 import { useAppStore } from "@/store/useAppStore";
@@ -42,12 +43,13 @@ import { CATEGORY_LABEL } from "@/lib/data";
 import { bob, daysLeft, shortDate } from "@/lib/format";
 import { available, compareBob, cupoPrice, offerById } from "@/lib/selectors";
 import { savingsBob } from "@/lib/pricing";
+import { cupoWhen, validityText } from "@/lib/usage";
 
 const REFUND_RULES = [
   "Grupo incompleto o reserva sin pagar: cancelas cuando quieras y te devolvemos todo.",
   "Primeras 24 horas después de pagar: te arrepientes sin penalización, aunque el grupo ya esté completo.",
   "Grupo completo: puedes ceder el cupo o cancelar con aprobación del negocio.",
-  "Una vez iniciado tu periodo: ya no corresponde reembolso, pero puedes ceder el cupo.",
+  "Una vez arranca el ciclo (o tu periodo, si el cupo tiene fechas): ya no corresponde reembolso, pero puedes ceder el cupo.",
 ];
 
 export function OfferDetail() {
@@ -94,12 +96,7 @@ export function OfferDetail() {
             <BusinessMark theme={offer.theme} name={offer.business} size="lg" />
             <div className="absolute bottom-3 left-3 right-3 flex flex-wrap items-center gap-1.5">
               <OfferStatusPill status={offer.status} className="shadow-sm" />
-              {offer.releaseType === "escalonada" && (
-                <Badge variant="gold" className="shadow-sm">
-                  <ShieldCheck className="size-3.5" aria-hidden="true" />
-                  Pago Protegido
-                </Badge>
-              )}
+              <ReleaseModeIndicator offer={offer} className="shadow-sm" />
               <Badge
                 variant="outline"
                 className="border-white/15 bg-black/45 text-white shadow-sm backdrop-blur"
@@ -195,8 +192,7 @@ export function OfferDetail() {
                   <div className="min-w-0 flex-1">
                     <p className="text-[13.5px] font-medium text-ink">{cupo.label}</p>
                     <p className="text-[11.5px] text-muted-foreground">
-                      {shortDate(cupo.start)} al {shortDate(cupo.end)} ·{" "}
-                      {cupo.status === "disponible" ? "libre" : "ocupado"}
+                      {cupoWhen(offer, cupo)} · {cupo.status === "disponible" ? "libre" : "ocupado"}
                     </p>
                   </div>
                   <span className="num text-[14px] font-semibold text-ink">{bob(cupo.priceBob)}</span>
@@ -210,8 +206,8 @@ export function OfferDetail() {
                     </Button>
                   ) : cupo.mine ? (
                     <Button asChild size="sm" variant="outline">
-                      <Link to={cupo.status === "activo" ? `/pase/${cupo.id}` : `/comprobante/${cupo.id}`}>
-                        {cupo.status === "activo" ? "Mi pase" : "Mi pago"}
+                      <Link to={cupo.status === "emitido" || cupo.status === "activado" ? `/pase/${cupo.id}` : `/comprobante/${cupo.id}`}>
+                        {cupo.status === "emitido" || cupo.status === "activado" ? "Mi código" : "Mi pago"}
                       </Link>
                     </Button>
                   ) : null}
@@ -260,6 +256,19 @@ export function OfferDetail() {
         </div>
 
         <aside className="space-y-4 lg:sticky lg:top-24">
+          <Card className="border-brand/25">
+            <CardContent className="p-4">
+              <p className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
+                Cómo se usa tu cupo
+              </p>
+              <p className="mt-2 font-display text-[16px] leading-tight text-ink">{offer.cupoUnit}</p>
+              <p className="mt-1.5 text-pretty text-[12.5px] leading-relaxed text-muted-foreground">
+                {offer.usageNote}
+              </p>
+              <p className="mt-2 text-[11.5px] text-muted-foreground">{validityText(offer)}</p>
+            </CardContent>
+          </Card>
+
           <Card>
             <CardContent className="p-4">
               <p className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">

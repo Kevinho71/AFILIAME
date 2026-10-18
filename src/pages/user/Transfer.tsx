@@ -37,7 +37,10 @@ export function Transfer() {
 
   const { offer, cupo } = found;
   const released = ["liberada", "en_curso"].includes(offer.status);
-  const canTransfer = cupo.status === "activo" || (cupo.status === "en_garantia" && released);
+  const canTransfer =
+    cupo.status === "emitido" ||
+    cupo.status === "activado" ||
+    (cupo.status === "en_garantia" && released);
   const commission = Math.round(Number(price || 0) * 0.025 * 100) / 100;
   const net = Math.round((Number(price || 0) - commission) * 100) / 100;
 
@@ -45,7 +48,7 @@ export function Transfer() {
     <div className="space-y-5">
       <PageHeader
         title="Ceder mi cupo"
-        subtitle="Si ya no puedes usar tu periodo, otra persona puede ocuparlo con la aprobación del negocio."
+        subtitle="Si ya no vas a usar tu cupo, otra persona puede ocuparlo con la aprobación del negocio."
         back="/mis-cupos"
       />
 
@@ -136,7 +139,7 @@ export function Transfer() {
                 "Publicas tu cupo con un precio igual o menor al original.",
                 "El negocio revisa y aprueba la cesión. Si rechaza, el cupo sigue siendo tuyo.",
                 "Otra persona paga el cupo. El pago entra a la garantía o se libera según la oferta.",
-                "Cuando se confirma, el pase cambia de nombre y recibes tu monto menos la comisión.",
+                "Cuando se confirma, el código cambia de titular y recibes tu monto menos la comisión.",
               ].map((item, index) => (
                 <li key={item} className="flex gap-3 rounded-xl border border-border/80 bg-card p-3.5">
                   <span className="num flex size-6 shrink-0 items-center justify-center rounded-full bg-brand-soft text-[12px] font-semibold text-brand-deep">

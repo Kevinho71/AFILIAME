@@ -37,7 +37,8 @@ function groupMyCupos(offers: Offer[]) {
   return {
     activos: rows.filter(
       (row) =>
-        row.cupo.status === "activo" ||
+        row.cupo.status === "emitido" ||
+        row.cupo.status === "activado" ||
         row.cupo.status === "en_cesion" ||
         (row.cupo.status === "en_garantia" && isReleased(row.offer)),
     ),
@@ -56,8 +57,12 @@ function CupoRowCard({ row }: { row: Row }) {
   const released = isReleased(offer);
 
   let cta = { to: `/esperando/${offer.id}`, label: "Ver progreso del grupo", icon: ShieldCheck };
-  if (cupo.status === "activo" || (cupo.status === "en_garantia" && released)) {
-    cta = { to: `/pase/${cupo.id}`, label: "Ver pase digital", icon: BadgeCheck };
+  if (cupo.status === "emitido" || cupo.status === "activado" || (cupo.status === "en_garantia" && released)) {
+    cta = {
+      to: `/pase/${cupo.id}`,
+      label: cupo.status === "activado" ? "Cupo activado" : "Ver código de activación",
+      icon: BadgeCheck,
+    };
   } else if (cupo.status === "reembolsado") {
     cta = { to: `/reembolso/${cupo.id}`, label: "Ver reembolso", icon: RotateCcw };
   } else if (cupo.status === "finalizado") {
@@ -96,7 +101,7 @@ function CupoRowCard({ row }: { row: Row }) {
         <div className="mt-3 flex flex-wrap items-center gap-2">
           <CupoStatusPill status={cupo.status} />
           {cupo.status === "en_garantia" && released && (
-            <Badge variant="gold">Grupo completo · pase emitido</Badge>
+            <Badge variant="gold">Grupo completo · código listo</Badge>
           )}
           {cupo.transfer && <Badge variant="gold">Cesión {cupo.transfer.status}</Badge>}
         </div>
@@ -108,7 +113,7 @@ function CupoRowCard({ row }: { row: Row }) {
               {cta.label}
             </Link>
           </Button>
-          {(cupo.status === "activo" || (cupo.status === "en_garantia" && released)) && (
+          {(cupo.status === "emitido" || cupo.status === "activado" || (cupo.status === "en_garantia" && released)) && (
             <Button asChild size="sm" variant="outline">
               <Link to={`/ceder/${cupo.id}`}>
                 <Repeat2 className="size-3.5" aria-hidden="true" />
@@ -151,7 +156,7 @@ export function MyCupos() {
     <div className="space-y-4">
       <PageHeader
         title="Mis cupos"
-        subtitle="Todo lo que reservaste, con el estado de tu pago y de tu pase."
+        subtitle="Todo lo que reservaste, con el estado de tu pago y de tu cupo."
       />
 
       <Tabs defaultValue="activos">
@@ -199,9 +204,10 @@ export function MyCupos() {
           Cupos que ya no se pueden tocar
         </p>
         <p className="mt-1 text-pretty text-[12px] leading-relaxed text-muted-foreground">
-          Un cupo liberado no tiene reembolso automático. Si ya no lo necesitas, publícalo en cesión:
-          el negocio aprueba y otra persona paga el precio original (con una comisión de cesión del 2%
-          al 3%).
+          Antes del cierre puedes retirar tu pago: gratis en las primeras 24 h, con 2% de
+          penalización después, y en los últimos 3 días solo cediendo tu cupo. Un cupo ya liberado
+          no tiene reembolso: si no lo necesitas, publícalo en cesión con la aprobación del negocio
+          (comisión del 2% al 3%).
         </p>
         <Button asChild variant="outline" size="sm" className="mt-3">
           <Link to="/oferta/powerfit">
@@ -210,7 +216,7 @@ export function MyCupos() {
           </Link>
         </Button>
         <p className="mt-3 text-[11.5px] text-muted-foreground">
-          Última actualización de tus periodos: {shortDate("2026-10-17")} .
+          Última actualización: {shortDate("2026-10-17")}.
         </p>
       </div>
     </div>

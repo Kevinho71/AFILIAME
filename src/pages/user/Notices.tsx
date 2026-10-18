@@ -65,7 +65,7 @@ export function Notices() {
     <div className="space-y-4">
       <PageHeader
         title="Avisos"
-        subtitle="Todo lo que pasa con tus cupos: reservas, grupos completos, accesos y reembolsos."
+        subtitle="Todo lo que pasa con tus cupos: reservas, grupos completos, activaciones y reembolsos."
         action={
           <Badge variant={unread > 0 ? "gold" : "muted"}>
             <BellRing className="size-3.5" aria-hidden="true" />

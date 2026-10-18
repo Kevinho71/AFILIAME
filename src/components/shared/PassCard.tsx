@@ -1,40 +1,35 @@
-import { BadgeCheck, CalendarDays, Clock3, MapPin, ShieldCheck } from "lucide-react";
+import { BadgeCheck, CalendarDays, Clock3, MapPin, ScanLine, ShieldCheck } from "lucide-react";
 import { QrFrame } from "@/components/shared/QrFrame";
 import { BusinessMark } from "@/components/shared/BusinessMark";
 import { Badge } from "@/components/ui/badge";
 import { CupoStatusPill } from "@/components/shared/status";
 import type { Cupo, Offer } from "@/lib/types";
-import { shortDate } from "@/lib/format";
+import { validityText } from "@/lib/usage";
+import { cupoWhen } from "@/lib/usage";
 
-export type PassVariant = "pendiente" | "activo" | "por_vencer" | "finalizado";
+export type PassVariant = "por_activar" | "activado" | "finalizado";
 
 export function passVariant(offer: Offer, cupo: Cupo): PassVariant {
   if (cupo.status === "finalizado" || offer.status === "finalizada") return "finalizado";
-  if (cupo.status === "activo") return "activo";
-  if (cupo.status === "en_cesion") return "pendiente";
-  return "pendiente";
+  if (cupo.status === "activado") return "activado";
+  return "por_activar";
 }
 
-const VARIANT_COPY: Record<PassVariant, { label: string; badge: "success" | "info" | "warn" | "muted"; note: string }> = {
-  pendiente: {
-    label: "Pase emitido · aún no inicia",
+const VARIANT_COPY: Record<PassVariant, { label: string; badge: "success" | "info" | "muted"; note: string }> = {
+  por_activar: {
+    label: "Código listo · sin activar",
     badge: "info",
-    note: "Tu pase se activa automáticamente el primer día de tu periodo.",
+    note: "Muestra este código una sola vez en recepción. Al activarlo queda inutilizable.",
   },
-  activo: {
-    label: "Pase activo",
+  activado: {
+    label: "Activado",
     badge: "success",
-    note: "Muestra este QR en recepción cada vez que ingreses.",
-  },
-  por_vencer: {
-    label: "Pase activo",
-    badge: "success",
-    note: "Tu periodo está en curso. Muestra este QR en recepción.",
+    note: "El negocio te inscribió en su propio sistema. Entra como te indique.",
   },
   finalizado: {
-    label: "Pase finalizado",
+    label: "Finalizado",
     badge: "muted",
-    note: "Este periodo ya terminó. Puedes calificar al negocio desde Mis cupos.",
+    note: "Tu cupo ya no está vigente. Puedes calificar al negocio desde Mis cupos.",
   },
 };
 
@@ -66,12 +61,24 @@ export function PassCard({
       </div>
 
       <div className="grid gap-5 p-4 sm:grid-cols-[auto_1fr] sm:items-center">
-        <QrFrame
-          value={`PASE-AF|${offer.id}|${cupo.id}|${name}|${cupo.start}|${cupo.end}`}
-          size={compact ? 128 : 150}
-          muted={variant === "finalizado"}
-          caption="Pase digital"
-        />
+        {variant === "activado" ? (
+          <div className="flex flex-col items-center justify-center gap-2 rounded-2xl border border-success/25 bg-success-soft/50 px-6 py-6 text-center">
+            <span className="flex size-12 items-center justify-center rounded-full bg-success text-primary-foreground">
+              <BadgeCheck className="size-6" aria-hidden="true" />
+            </span>
+            <p className="font-display text-[15px]">Cupo activado</p>
+            {cupo.activatedAt && (
+              <p className="text-[11.5px] text-muted-foreground">Activado el {cupo.activatedAt}</p>
+            )}
+          </div>
+        ) : (
+          <QrFrame
+            value={`ACTIVA-AF|${offer.id}|${cupo.id}|${name}|${offer.validTo}`}
+            size={compact ? 128 : 150}
+            muted={variant === "finalizado"}
+            caption="Código de activación · un solo uso"
+          />
+        )}
         <div className="space-y-3">
           <div>
             <p className="text-[11.5px] uppercase tracking-wide text-muted-foreground">Beneficiario</p>
@@ -81,8 +88,12 @@ export function PassCard({
             <p className="flex items-center gap-2">
               <CalendarDays className="size-4 shrink-0 text-brand/70" aria-hidden="true" />
               <span>
-                <span className="text-ink">{cupo.label}</span> · {shortDate(cupo.start)} al {shortDate(cupo.end)}
+                <span className="text-ink">{cupo.label}</span> · {cupoWhen(offer, cupo)}
               </span>
+            </p>
+            <p className="flex items-center gap-2">
+              <ShieldCheck className="size-4 shrink-0 text-brand/70" aria-hidden="true" />
+              Anualidad válida {validityText(offer)}
             </p>
             <p className="flex items-center gap-2">
               <MapPin className="size-4 shrink-0 text-brand/70" aria-hidden="true" />
@@ -100,7 +111,12 @@ export function PassCard({
               Identidad verificada
             </Badge>
           </div>
-          <p className="text-pretty text-[12px] leading-relaxed text-muted-foreground">{copy.note}</p>
+          <p className="flex items-start gap-2 text-pretty text-[12px] leading-relaxed text-muted-foreground">
+            {variant === "por_activar" && (
+              <ScanLine className="mt-0.5 size-3.5 shrink-0 text-brand/70" aria-hidden="true" />
+            )}
+            {copy.note}
+          </p>
         </div>
       </div>
 

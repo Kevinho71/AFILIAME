@@ -56,6 +56,7 @@ export const releaseLabel = (offer: Offer) =>
   offer.releaseType === "escalonada" ? "Pago Protegido" : "Liberación completa";
 
 export const cupoMonthSpan = (cupo: Cupo) => {
+  if (!cupo.start || !cupo.end) return null;
   const start = new Date(cupo.start);
   const end = new Date(cupo.end);
   return (

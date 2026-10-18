@@ -1,9 +1,9 @@
-import { CalendarClock, MapPin, PiggyBank, ShieldCheck } from "lucide-react";
+import { CalendarClock, MapPin, PiggyBank } from "lucide-react";
 import { Link } from "react-router-dom";
 import { BusinessMark } from "@/components/shared/BusinessMark";
 import { CuposProgress } from "@/components/shared/CuposProgress";
 import { OfferStatusPill } from "@/components/shared/status";
-import { Badge } from "@/components/ui/badge";
+import { ReleaseModeBadge } from "@/components/shared/ReleaseMode";
 import { CATEGORY_LABEL } from "@/lib/data";
 import { bob, daysLeft } from "@/lib/format";
 import { available, compareBob, cupoPrice } from "@/lib/selectors";
@@ -35,12 +35,7 @@ export function OfferCard({ offer }: { offer: Offer }) {
         <BusinessMark theme={offer.theme} name={offer.business} size="lg" />
         <div className="absolute left-2.5 top-2.5 flex flex-wrap items-center gap-1.5">
           <OfferStatusPill status={offer.status} className="shadow-sm" />
-          {offer.releaseType === "escalonada" && (
-            <Badge variant="gold" className="shadow-sm">
-              <ShieldCheck className="size-3.5" aria-hidden="true" />
-              Pago Protegido
-            </Badge>
-          )}
+          <ReleaseModeBadge offer={offer} className="shadow-sm" />
         </div>
       </div>
 

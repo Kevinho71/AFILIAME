@@ -28,6 +28,7 @@ import { USER } from "@/lib/data";
 import { bob, shortDate } from "@/lib/format";
 import { compareBob, offerById } from "@/lib/selectors";
 import { savingsBob } from "@/lib/pricing";
+import { cupoWhen } from "@/lib/usage";
 import { cn } from "@/lib/utils";
 
 export function ChooseCupo() {
@@ -99,6 +100,10 @@ export function ChooseCupo() {
       <div className="grid gap-5 lg:grid-cols-[1.55fr_1fr] lg:items-start">
         <div className="space-y-4">
           <SectionTitle hint="Cada persona ocupa un cupo">Cupos libres</SectionTitle>
+          <p className="rounded-xl border border-border/70 bg-card px-3.5 py-3 text-[12.5px] leading-relaxed text-muted-foreground">
+            <span className="font-medium text-ink">{offer.cupoUnit}. </span>
+            {offer.usageNote}
+          </p>
           <RadioGroup value={cupo.id} onValueChange={setSelected}>
             {availableCupos.map((item) => {
               const active = item.id === cupo.id;
@@ -118,7 +123,7 @@ export function ChooseCupo() {
                     <p className="text-[14px] font-semibold text-ink">{item.label}</p>
                     <p className="mt-0.5 flex items-center gap-1.5 text-[12px] text-muted-foreground">
                       <CalendarDays className="size-3.5" aria-hidden="true" />
-                      {shortDate(item.start)} al {shortDate(item.end)}
+                      {cupoWhen(offer, item)}
                     </p>
                   </div>
                   <span className="num shrink-0 text-[15px] font-semibold text-ink">
@@ -168,7 +173,7 @@ export function ChooseCupo() {
                 <ol className="space-y-2">
                   {[
                     "Tu pago queda protegido y no llega al negocio todavía.",
-                    `Si el grupo se completa antes del ${shortDate(offer.deadline)}, el negocio cobra el año completo y tu pase digital queda listo.`,
+                    `Si el grupo se completa antes del ${shortDate(offer.deadline)}, el negocio cobra el año completo y tu código de activación queda listo.`,
                     "Si no se completa, te devolvemos el pago completo en 24 a 72 horas hábiles, sin comisión.",
                   ].map((item, index) => (
                     <li key={item} className="flex gap-3">

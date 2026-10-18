@@ -123,27 +123,31 @@ export function Profile() {
       </Card>
 
       <div>
-        <SectionTitle hint="Pagas siempre en bolivianos">Métodos de pago</SectionTitle>
+        <SectionTitle hint="Aquí te devolvemos el dinero">Cuenta de devolución</SectionTitle>
         <div className="space-y-2">
           <div className="flex items-center gap-3 rounded-2xl border border-border/80 bg-card p-3.5">
             <span className="flex size-9 items-center justify-center rounded-lg bg-brand-soft text-brand">
               <Landmark className="size-4.5" aria-hidden="true" />
             </span>
             <div className="min-w-0">
-              <p className="text-[13.5px] font-medium text-ink">QR bancario</p>
-              <p className="text-[11.5px] text-muted-foreground">Banco Fassil · cuenta de ahorro •• 4417</p>
+              <p className="text-[13.5px] font-medium text-ink">{USER.bankAccount}</p>
+              <p className="text-[11.5px] text-muted-foreground">A tu nombre · los reembolsos vuelven aquí</p>
             </div>
             <Badge variant="soft" className="ml-auto">
-              Predeterminado
+              Predeterminada
             </Badge>
           </div>
+          <p className="text-pretty text-[11.5px] leading-relaxed text-muted-foreground">
+            Si el grupo no se completa o retiras tu pago, el dinero vuelve a esta cuenta en 24 a 72
+            horas hábiles. No es un QR: es tu cuenta bancaria.
+          </p>
           <Button
             variant="outline"
             size="sm"
-            onClick={() => toast.info("Método de pago agregado")}
+            onClick={() => toast.info("Cuenta actualizada")}
           >
             <Plus className="size-4" aria-hidden="true" />
-            Agregar método de pago
+            Cambiar cuenta de devolución
           </Button>
         </div>
       </div>
