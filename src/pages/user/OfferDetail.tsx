@@ -36,7 +36,7 @@ import { BusinessMark } from "@/components/shared/BusinessMark";
 import { GuaranteeSteps } from "@/components/shared/GuaranteeSteps";
 import { CuposProgress } from "@/components/shared/CuposProgress";
 import { ReleaseModeIndicator } from "@/components/shared/ReleaseMode";
-import { CupoStatusPill, OfferStatusPill } from "@/components/shared/status";
+import { OfferStatusPill } from "@/components/shared/status";
 import { EmptyState, MoneyRow, PageHeader, SectionTitle } from "@/components/shared/pieces";
 import { useAppStore } from "@/store/useAppStore";
 import { CATEGORY_LABEL } from "@/lib/data";
@@ -184,35 +184,55 @@ export function OfferDetail() {
               Cupos de esta oferta
             </SectionTitle>
             <div className="space-y-2">
-              {offer.cupos.map((cupo) => (
-                <div
-                  key={cupo.id}
-                  className="flex flex-wrap items-center gap-3 rounded-2xl border border-border/80 bg-card p-3.5"
-                >
-                  <div className="min-w-0 flex-1">
-                    <p className="text-[13.5px] font-medium text-ink">{cupo.label}</p>
-                    <p className="text-[11.5px] text-muted-foreground">
-                      {cupoWhen(offer, cupo)} · {cupo.status === "disponible" ? "libre" : "ocupado"}
-                    </p>
+              {offer.cupos.map((cupo) => {
+                const isFree = cupo.status === "disponible";
+                return (
+                  <div
+                    key={cupo.id}
+                    className="relative flex items-center gap-3 rounded-2xl border border-border/80 bg-card p-3.5"
+                  >
+                    {isFree && (
+                      <span className="absolute right-2 top-2 rounded-full bg-brand-soft px-1.5 py-0.5 text-[9px] font-semibold uppercase leading-none tracking-wide text-brand">
+                        Disponible
+                      </span>
+                    )}
+                    <div className="min-w-0 flex-1">
+                      <p className="text-[13.5px] font-medium text-ink">{cupo.label}</p>
+                      <p className="text-[11.5px] text-muted-foreground">{cupoWhen(offer, cupo)}</p>
+                    </div>
+                    <div className="flex shrink-0 flex-col items-end gap-1.5">
+                      <span className="num text-[14px] font-semibold text-ink">{bob(cupo.priceBob)}</span>
+                      {!isFree && (
+                        <span className="rounded-full bg-secondary px-2 py-0.5 text-[10.5px] font-medium leading-none text-muted-foreground">
+                          Reservado
+                        </span>
+                      )}
+                    </div>
+                    {isFree ? (
+                      <Button
+                        size="sm"
+                        onClick={() => navigate(`/oferta/${offer.id}/reservar?cupo=${cupo.id}`)}
+                      >
+                        Reservar
+                      </Button>
+                    ) : cupo.mine ? (
+                      <Button asChild size="sm" variant="outline">
+                        <Link
+                          to={
+                            cupo.status === "emitido" || cupo.status === "activado"
+                              ? `/pase/${cupo.id}`
+                              : `/comprobante/${cupo.id}`
+                          }
+                        >
+                          {cupo.status === "emitido" || cupo.status === "activado"
+                            ? "Mi código"
+                            : "Mi pago"}
+                        </Link>
+                      </Button>
+                    ) : null}
                   </div>
-                  <span className="num text-[14px] font-semibold text-ink">{bob(cupo.priceBob)}</span>
-                  <CupoStatusPill status={cupo.status} />
-                  {cupo.status === "disponible" ? (
-                    <Button
-                      size="sm"
-                      onClick={() => navigate(`/oferta/${offer.id}/reservar?cupo=${cupo.id}`)}
-                    >
-                      Reservar
-                    </Button>
-                  ) : cupo.mine ? (
-                    <Button asChild size="sm" variant="outline">
-                      <Link to={cupo.status === "emitido" || cupo.status === "activado" ? `/pase/${cupo.id}` : `/comprobante/${cupo.id}`}>
-                        {cupo.status === "emitido" || cupo.status === "activado" ? "Mi código" : "Mi pago"}
-                      </Link>
-                    </Button>
-                  ) : null}
-                </div>
-              ))}
+                );
+              })}
             </div>
           </div>
 
